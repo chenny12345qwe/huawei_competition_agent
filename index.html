@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>游哪儿 · 国内旅游攻略</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="logo" onclick="goHome()">游哪儿 <span>· 不知道去哪儿？帮你选</span></div>
+  <div class="search-box">
+    <input id="searchInput" type="text" placeholder="搜城市 / 关键词，如 海滨、亲子、大理" onkeydown="if(event.key==='Enter')doSearch()">
+    <button onclick="doSearch()">搜索</button>
+  </div>
+</header>
+<main id="app"></main>
+<footer>共收录 <b id="cityCount"></b> 个旅游城市 · 攻略基于通用旅游知识整理，行前请核实实时信息</footer>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
