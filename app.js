@@ -3,6 +3,7 @@ const CROWD_ICON = {family:"👨‍👩‍👧",couple:"💕",solo:"🧭",senior
 const THEME_ICON = {nature:"🏔️",history:"🏛️",seaside:"🏖️",ancient:"🏚️",city:"🏙️",food:"🍴",outdoor:"🥾",folk:"🎭",culture:"🎨"};
 const SEASON_ICON = {spring:"🌸",summer:"☀️",autumn:"🍂",winter:"❄️"};
 
+
 function goHome(){ document.getElementById('searchInput').value=''; renderHome(); }
 
 function renderHome(){
@@ -102,12 +103,40 @@ function showDetail(id){
       <div class="meta-box">👥 适合：<b>${c.crowds.map(x=>CROWDS[x]).join('、')}</b></div>
       <div class="meta-box">🎯 主题：<b>${c.themes.map(x=>THEMES[x]).join('、')}</b></div>
     </div>`;
-  [["🗺️ 行程建议","route"],["🚗 交通","traffic"],["🏨 住宿","stay"],["🍴 美食","food"],["⚠️ 避坑贴士","tips"],["💰 花费参考","cost"]].forEach(([k,v])=>{
-    html += `<div class="guide-row"><div class="k">${k}</div><div class="v">${g[v]}</div></div>`;
+  [["🗺️ 行程路线","route"],["🚗 交通","traffic"],["🏨 住宿","stay"],["🍴 美食","food"],["⚠️ 避坑贴士","tips"],["💰 花费参考","cost"]].forEach(([k,v])=>{
+    if(v==='route'){
+      html += `<div class="guide-row"><div class="k">${k}</div><div class="v">${renderRoute(g[v], c.name)}</div></div>`;
+    } else {
+      html += `<div class="guide-row"><div class="k">${k}</div><div class="v">${g[v]}</div></div>`;
+    }
   });
   html += `</div>`;
   app.innerHTML = html;
+
   window.scrollTo(0,0);
+}
+
+
+// shortcut: 交通时间为启发式估算(含山/湖/寺等远景点40-60分钟,否则20-30分钟),需逐城精确数据时升级
+function transitBetween(a, b){
+  const far = /山|长城|湖|岛|湾|寺|陵|遗址|景区|瀑布|峡谷|湿地|森林公园|天池/.test(a+b);
+  return far ? '🚕 打车/公交 约40-60分钟' : '🚇 地铁/步行 约20-30分钟';
+}
+function renderRoute(routeText, cityName){
+  const days = routeText.split(/[；;。]/).filter(s=>s.trim());
+  return days.map(dayStr=>{
+    const dm = dayStr.match(/Day\s*(\d+)/i);
+    const dayNum = dm ? dm[1] : '';
+    let spotsStr = dayStr.replace(/Day\s*\d+\s*/i,'').trim();
+    const spots = spotsStr.split('+').map(s=>s.trim()).filter(s=>s);
+    let h = `<div class="route-day">第 ${dayNum} 天</div><div class="route-spots">`;
+    spots.forEach((sp,i)=>{
+      const clean = sp.replace(/[（(].*?[)）]/g,'').trim();
+      h += `<div class="spot"><div class="spot-name">${sp}</div></div>`;
+      if(i < spots.length-1) h += `<div class="transit">${transitBetween(spots[i],spots[i+1])}</div>`;
+    });
+    return h + `</div>`;
+  }).join('');
 }
 
 renderHome();
