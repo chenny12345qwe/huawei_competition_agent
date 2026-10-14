@@ -2,9 +2,34 @@ const app = document.getElementById('app');
 const CROWD_ICON = {family:"👨‍👩‍👧",couple:"💕",solo:"🧭",senior:"🌿",student:"🎒",photo:"📷",foodie:"🍜",outdoor:"⛰️"};
 const THEME_ICON = {nature:"🏔️",history:"🏛️",seaside:"🏖️",ancient:"🏚️",city:"🏙️",food:"🍴",outdoor:"🥾",folk:"🎭",culture:"🎨"};
 const SEASON_ICON = {spring:"🌸",summer:"☀️",autumn:"🍂",winter:"❄️"};
+const TABS = ['guide','trip','photo'];
 
 
 function goHome(){ document.getElementById('searchInput').value=''; renderHome(); }
+
+function applyTab(tab){
+  document.getElementById('app').classList.toggle('hidden', tab!=='guide');
+  document.getElementById('searchBox').classList.toggle('hidden', tab!=='guide');
+  document.getElementById('tripView').classList.toggle('hidden', tab!=='trip');
+  document.getElementById('photoWall').classList.toggle('hidden', tab!=='photo');
+  TABS.forEach(t=>{
+    const btn = document.getElementById('tab-'+t);
+    btn.classList.toggle('active', t===tab);
+    btn.setAttribute('aria-selected', t===tab?'true':'false');
+  });
+  if(tab==='guide') goHome();
+}
+
+function showTab(tab){
+  const hash = '#'+tab;
+  if(location.hash !== hash) location.hash = hash;
+  else applyTab(tab);
+}
+
+window.addEventListener('hashchange', ()=>{
+  const tab = TABS.find(t => location.hash === '#'+t) || 'guide';
+  applyTab(tab);
+});
 
 function renderHome(){
   document.getElementById('cityCount').textContent = CITIES.length;
@@ -14,7 +39,7 @@ function renderHome(){
   html += `<div class="section-title">你是哪种旅行者？</div><div class="tag-grid">`;
   Object.keys(CROWDS).forEach(k=>{
     const n = CITIES.filter(c=>c.crowds.includes(k)).length;
-    html += `<div class="tag-card" onclick="filterCrowd('${k}')"><span class="icon">${CROWD_ICON[k]}</span><div class="label">${CROWDS[k]}</div><div class="count">${n} 个城市</div></div>`;
+    html += `<div class="tag-card" data-act="crowd" data-key="${k}"><span class="icon">${CROWD_ICON[k]}</span><div class="label">${CROWDS[k]}</div><div class="count">${n} 个城市</div></div>`;
   });
   html += `</div>`;
 
@@ -22,7 +47,7 @@ function renderHome(){
   html += `<div class="section-title">想玩什么？</div><div class="tag-grid">`;
   Object.keys(THEMES).forEach(k=>{
     const n = CITIES.filter(c=>c.themes.includes(k)).length;
-    html += `<div class="tag-card" onclick="filterTheme('${k}')"><span class="icon">${THEME_ICON[k]}</span><div class="label">${THEMES[k]}</div><div class="count">${n} 个城市</div></div>`;
+    html += `<div class="tag-card" data-act="theme" data-key="${k}"><span class="icon">${THEME_ICON[k]}</span><div class="label">${THEMES[k]}</div><div class="count">${n} 个城市</div></div>`;
   });
   html += `</div>`;
 
@@ -30,7 +55,7 @@ function renderHome(){
   html += `<div class="section-title">什么季节出发？</div><div class="season-row">`;
   Object.keys(SEASONS).forEach(k=>{
     const n = CITIES.filter(c=>c.seasons.includes(k)).length;
-    html += `<div class="season-btn" onclick="filterSeason('${k}')"><span class="em">${SEASON_ICON[k]}</span>${SEASONS[k]}<br><span style="font-size:12px;color:var(--ink-soft);font-weight:400">${n} 城推荐</span></div>`;
+    html += `<div class="season-btn" data-act="season" data-key="${k}"><span class="em">${SEASON_ICON[k]}</span>${SEASONS[k]}<br><span style="font-size:12px;color:var(--ink-soft);font-weight:400">${n} 城推荐</span></div>`;
   });
   html += `</div>`;
 
@@ -47,7 +72,7 @@ function renderHome(){
 function cityCard(c){
   const chips = c.themes.slice(0,2).map(t=>`<span class="chip">${THEMES[t]}</span>`).join('')
     + c.crowds.slice(0,1).map(t=>`<span class="chip crowd">${CROWDS[t]}</span>`).join('');
-  return `<div class="city-card" onclick="showDetail('${c.id}')"><div><span class="name">${c.name}</span><span class="prov">${c.province}</span></div><div class="intro">${c.intro}</div><div class="chips">${chips}</div></div>`;
+  return `<div class="city-card" data-act="detail" data-key="${c.id}"><div><span class="name">${c.name}</span><span class="prov">${c.province}</span></div><div class="intro">${c.intro}</div><div class="chips">${chips}</div></div>`;
 }
 
 function filterCrowd(k){
@@ -70,12 +95,12 @@ function doSearch(){
     const hay = (c.name+c.province+c.intro+c.themes.map(t=>THEMES[t]).join()+c.crowds.map(t=>CROWDS[t]).join()+c.seasons.map(t=>SEASONS[t]).join()+c.guide.route+c.guide.food+c.guide.tips).toLowerCase();
     return hay.includes(q);
   });
-  if(!list.length){ app.innerHTML = `<div class="empty"><div class="big">🧭</div>没找到"${q}"相关城市，换个关键词试试？<br><span onclick="goHome()" style="color:var(--blue-deep);cursor:pointer">返回首页</span></div>`; return; }
+  if(!list.length){ app.innerHTML = `<div class="empty"><div class="big">🧭</div>没找到"${q}"相关城市，换个关键词试试？<br><span data-act="home" style="color:var(--blue-deep);cursor:pointer">返回首页</span></div>`; return; }
   renderGrouped(list, `搜索"${q}" · ${list.length} 个城市`, 'theme');
 }
 
 function renderGrouped(list, title, groupBy){
-  let html = `<div class="back" onclick="goHome()">← 返回首页</div><div class="section-title">${title}</div>`;
+  let html = `<div class="back" data-act="home">← 返回首页</div><div class="section-title">${title}</div>`;
   const groups = {};
   list.forEach(c=>{
     const keys = groupBy==='theme' ? c.themes : c.crowds;
@@ -95,7 +120,7 @@ function renderGrouped(list, title, groupBy){
 function showDetail(id){
   const c = CITIES.find(x=>x.id===id); if(!c) return;
   const g = c.guide;
-  let html = `<div class="back" onclick="goHome()">← 返回</div><div class="detail">
+  let html = `<div class="back" data-act="home">← 返回</div><div class="detail">
     <h2>${c.name} <span style="font-size:14px;color:var(--ink-soft);font-weight:400">${c.province}</span></h2>
     <div class="sub">推荐 ${c.days} 天 · ${BUDGETS[c.budget]} · 最佳：${c.seasons.map(s=>SEASONS[s]).join('、')}</div>
     <div class="intro">${c.intro}</div>
@@ -139,4 +164,23 @@ function renderRoute(routeText, cityName){
   }).join('');
 }
 
-renderHome();
+try {
+  renderHome();
+  document.getElementById('logo').addEventListener('click', ()=>showTab('guide'));
+  TABS.forEach(t=> document.getElementById('tab-'+t).addEventListener('click', ()=>showTab(t)));
+  document.getElementById('searchBtn').addEventListener('click', doSearch);
+  document.getElementById('searchInput').addEventListener('keydown', e=>{ if(e.key==='Enter') doSearch(); });
+  app.addEventListener('click', e=>{
+    const t = e.target.closest('[data-act]'); if(!t) return;
+    const act = t.dataset.act, key = t.dataset.key;
+    if(act==='crowd') filterCrowd(key);
+    else if(act==='theme') filterTheme(key);
+    else if(act==='season') filterSeason(key);
+    else if(act==='detail') showDetail(key);
+    else if(act==='home') goHome();
+  });
+  const initTab = TABS.find(t => location.hash === '#'+t) || 'guide';
+  if(initTab !== 'guide') applyTab(initTab);
+} finally {
+  document.getElementById('loading').classList.add('hidden');
+}

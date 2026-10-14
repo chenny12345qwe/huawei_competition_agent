@@ -1,10 +1,15 @@
-const app = document.getElementById('app');
+const tripApp = document.getElementById('tripApp');
 const tabs = document.getElementById('cityTabs');
 let currentCity = '';
 
+tabs.addEventListener('click', e=>{
+  const t = e.target.closest('[data-city]'); if(!t) return;
+  selectCity(t.dataset.city);
+});
+
 function renderTabs(){
   tabs.innerHTML = TRIP_DATA.cities.map(c =>
-    `<button class="city-tab ${c.city===currentCity?'active':''}" onclick="selectCity('${c.city}')">${c.city}</button>`
+    `<button class="city-tab ${c.city===currentCity?'active':''}" data-city="${c.city}">${c.city}</button>`
   ).join('');
 }
 
@@ -23,7 +28,7 @@ function selectCity(city){
       </div>
     </div>`;
   });
-  app.innerHTML = html + `</div>`;
+  tripApp.innerHTML = html + `</div>`;
   window.scrollTo(0, 0);
 }
 

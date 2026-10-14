@@ -2,21 +2,54 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="游哪儿 — 国内旅游攻略查询，按人群、主题、季节推荐城市，提供行程路线、交通、住宿、美食、避坑贴士，支持旅友晒图分享。">
 <title>游哪儿 · 国内旅游攻略</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div id="loading" class="loading-overlay">⏳ 加载中…</div>
 <header class="topbar">
-  <div class="logo" onclick="goHome()">游哪儿 <span>· 不知道去哪儿？帮你选</span></div>
-  <div class="search-box">
-    <input id="searchInput" type="text" placeholder="搜城市 / 关键词，如 海滨、亲子、大理" onkeydown="if(event.key==='Enter')doSearch()">
-    <button onclick="doSearch()">搜索</button>
+  <button class="logo" id="logo" aria-label="返回攻略首页">游哪儿 <span>· 不知道去哪儿？帮你选</span></button>
+  <nav class="nav-tabs" role="tablist">
+    <button class="nav-tab active" id="tab-guide" role="tab" aria-selected="true">🏠 攻略</button>
+    <button class="nav-tab" id="tab-trip" role="tab" aria-selected="false">🗺️ 行程</button>
+    <button class="nav-tab" id="tab-photo" role="tab" aria-selected="false">📸 晒图</button>
+  </nav>
+  <div class="search-box" id="searchBox">
+    <input id="searchInput" type="text" placeholder="搜城市 / 关键词，如 海滨、亲子、大理">
+    <button id="searchBtn">搜索</button>
   </div>
 </header>
-<main id="app"></main>
+<main>
+  <div id="app"></div>
+  <section id="tripView" class="hidden" role="tabpanel">
+    <h2 class="view-title">🗺️ 多城市行程切换</h2>
+    <div id="cityTabs" class="city-tabs"></div>
+    <div id="tripApp"></div>
+  </section>
+  <section id="photoWall" class="hidden" role="tabpanel">
+    <h3>📸 旅友晒图</h3>
+    <div class="upload-bar">
+      <input type="file" id="photoUpload" accept="image/*">
+      <label class="cam-btn hidden" id="camWrap">📷 拍照<input type="file" id="photoCamera" accept="image/*" capture="environment" hidden></label>
+      <span class="cam-tip hidden" id="camTip">📱 拍照功能仅在手机端可用</span>
+      <fieldset class="vis-field">
+        <legend>可见范围</legend>
+        <label><input type="radio" name="vis" value="local" checked> 仅自己可见</label>
+        <label><input type="radio" name="vis" value="public"> 公开共享</label>
+      </fieldset>
+      <input type="password" id="photoToken" placeholder="GitHub Token（公开需要）">
+      <small class="token-tip">⚠️ Token 仅存本地，建议使用最小权限（public_repo）token，切勿泄露分享</small>
+    </div>
+    <div id="photoGrid" class="photo-grid"></div>
+  </section>
+</main>
 <footer>共收录 <b id="cityCount"></b> 个旅游城市 · 攻略基于通用旅游知识整理，行前请核实实时信息</footer>
 <script src="data.js"></script>
+<script src="trip-data.js"></script>
 <script src="app.js"></script>
+<script src="trip-app.js"></script>
+<script src="photo-wall.js"></script>
 </body>
 </html>
