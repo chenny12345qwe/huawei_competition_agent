@@ -6,6 +6,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:var(--blue-bg);color:var(--ink);line-height:1.6}
 .hidden{display:none!important}
+.tag-card,.city-card,.season-btn,.back,.nav-tab,.city-tab,.logo,.search-box button{touch-action:manipulation}
 .loading-overlay{position:fixed;inset:0;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;z-index:9999;font-size:18px;color:var(--ink-soft)}
 .topbar{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between;padding:14px 28px;box-shadow:var(--shadow);flex-wrap:wrap;gap:12px}
 .logo{font-size:22px;font-weight:700;color:var(--blue-deep);cursor:pointer;border:none;background:none;font-family:inherit;text-align:left;padding:0}

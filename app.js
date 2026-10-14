@@ -164,8 +164,8 @@ function renderRoute(routeText, cityName){
   }).join('');
 }
 
+setTimeout(()=>{ const l=document.getElementById('loading'); if(l) l.classList.add('hidden'); }, 3000);
 try {
-  renderHome();
   document.getElementById('logo').addEventListener('click', ()=>showTab('guide'));
   TABS.forEach(t=> document.getElementById('tab-'+t).addEventListener('click', ()=>showTab(t)));
   document.getElementById('searchBtn').addEventListener('click', doSearch);
@@ -179,8 +179,12 @@ try {
     else if(act==='detail') showDetail(key);
     else if(act==='home') goHome();
   });
+  renderHome();
   const initTab = TABS.find(t => location.hash === '#'+t) || 'guide';
   if(initTab !== 'guide') applyTab(initTab);
+} catch(err) {
+  console.error('初始化失败:', err);
+  app.innerHTML = '<div class="empty"><div class="big">⚠️</div>数据加载失败，请刷新重试</div>';
 } finally {
   document.getElementById('loading').classList.add('hidden');
 }
