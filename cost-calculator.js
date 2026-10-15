@@ -51,9 +51,9 @@ function getBaiduDistance(from,to){
   return Promise.race([
     new Promise(r=>{
       try{
-        if(!_bmap) _bmap=new BMap.Map('baiduMap');
+        if(!_bmap) _bmap=new BMap.Map('costMap');
         const [lat1,lng1]=CITY_COORDS[from], [lat2,lng2]=CITY_COORDS[to];
-        const s=new BMap.DrivingRoute(_bmap,{renderOptions:{autoViewport:false}});
+        const s=new BMap.DrivingRoute(_bmap,{renderOptions:{map:_bmap,autoViewport:true}});
         s.setSearchCompleteCallback(function(){
           if(s.getStatus()===BMAP_STATUS_SUCCESS){
             const p=s.getResults().getPlan(0);
@@ -82,9 +82,11 @@ async function calcCost(){
   const to=document.getElementById('costTo').value;
   const mode=document.getElementById('costMode').value;
   const result=document.getElementById('costResult');
-  if(from===to){ result.innerHTML='<p class="cost-error">出发地和目的地相同，请重新选择</p>'; return; }
+  const mapEl=document.getElementById('costMap');
+  if(from===to){ result.innerHTML='<p class="cost-error">出发地和目的地相同，请重新选择</p>'; mapEl.classList.add('hidden'); return; }
 
   result.innerHTML='<p class="cost-tip">⏳ 正在获取路线…</p>';
+  mapEl.classList.add('hidden');
 
   const [lat1,lng1]=CITY_COORDS[from], [lat2,lng2]=CITY_COORDS[to];
   const t=TRANSPORT[mode];
@@ -97,12 +99,16 @@ async function calcCost(){
   } else {
     const ok=await waitBMap();
     let bd=null;
-    if(ok) bd=await getBaiduDistance(from,to);
+    if(ok){
+      mapEl.classList.remove('hidden');
+      bd=await getBaiduDistance(from,to);
+    }
     if(bd){
       distance=Math.round(bd.distance/1000);
       hours=Math.round(bd.duration/3600);
       source='百度地图实测';
     } else {
+      mapEl.classList.add('hidden');
       distance=Math.round(haversine(lat1,lng1,lat2,lng2)*1.3);
       hours=Math.round(distance/t.speed+t.extraTime);
       source='直线距离估算';
