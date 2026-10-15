@@ -1,3 +1,5 @@
+const BAIDU_AK = '5PDLRUD4exDVKbSuwdzRRdsX4GywtPks';
+
 const CITY_COORDS = {
   "北京":[39.9042,116.4074],"天津":[39.0842,117.2009],"承德":[40.9510,117.9622],
   "北戴河":[39.8350,119.4930],"大同":[40.0768,113.3001],"平遥":[37.1897,112.1756],
@@ -20,7 +22,7 @@ const CITY_COORDS = {
   "喀什":[39.4704,75.9898]
 };
 
-// shortcut: 直线距离需乘1.3估算实际路程,精确值需路线规划API
+// shortcut: 百度地图JS API不可用时降级为直线距离×1.3
 function haversine(lat1,lng1,lat2,lng2){
   const R=6371, toRad=d=>d*Math.PI/180;
   const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
@@ -36,6 +38,35 @@ const TRANSPORT = {
   bus:{name:"🚌 大巴",costPerKm:0.3,baseCost:0,speed:70,extraTime:0.5,note:"长途大巴"}
 };
 
+let _bmap=null;
+function waitBMap(t=5000){
+  return new Promise(r=>{
+    if(window.BMap) return r(true);
+    const s=Date.now();
+    const c=setInterval(()=>{ if(window.BMap){clearInterval(c);r(true);} else if(Date.now()-s>t){clearInterval(c);r(false);} },100);
+  });
+}
+
+function getBaiduDistance(from,to){
+  return Promise.race([
+    new Promise(r=>{
+      try{
+        if(!_bmap) _bmap=new BMap.Map('baiduMap');
+        const [lat1,lng1]=CITY_COORDS[from], [lat2,lng2]=CITY_COORDS[to];
+        const s=new BMap.DrivingRoute(_bmap,{renderOptions:{autoViewport:false}});
+        s.setSearchCompleteCallback(function(){
+          if(s.getStatus()===BMAP_STATUS_SUCCESS){
+            const p=s.getResults().getPlan(0);
+            r({distance:p.getDistance(false),duration:p.getDuration(false)});
+          } else r(null);
+        });
+        s.search(new BMap.Point(lng1,lat1),new BMap.Point(lng2,lat2));
+      }catch(e){r(null);}
+    }),
+    new Promise(r=>setTimeout(()=>r(null),8000))
+  ]);
+}
+
 function initCostCalc(){
   const from=document.getElementById('costFrom'), to=document.getElementById('costTo');
   Object.keys(CITY_COORDS).sort().forEach(c=>{
@@ -46,21 +77,42 @@ function initCostCalc(){
   document.getElementById('costBtn').addEventListener('click', calcCost);
 }
 
-function calcCost(){
+async function calcCost(){
   const from=document.getElementById('costFrom').value;
   const to=document.getElementById('costTo').value;
   const mode=document.getElementById('costMode').value;
   const result=document.getElementById('costResult');
   if(from===to){ result.innerHTML='<p class="cost-error">出发地和目的地相同，请重新选择</p>'; return; }
+
+  result.innerHTML='<p class="cost-tip">⏳ 正在获取路线…</p>';
+
   const [lat1,lng1]=CITY_COORDS[from], [lat2,lng2]=CITY_COORDS[to];
-  const lineDist=haversine(lat1,lng1,lat2,lng2);
-  const distance=Math.round(lineDist*1.3);
   const t=TRANSPORT[mode];
+  let distance, hours, source;
+
+  if(mode==='plane'){
+    distance=Math.round(haversine(lat1,lng1,lat2,lng2)*1.1);
+    hours=Math.round(distance/t.speed+t.extraTime);
+    source='直线距离';
+  } else {
+    const ok=await waitBMap();
+    let bd=null;
+    if(ok) bd=await getBaiduDistance(from,to);
+    if(bd){
+      distance=Math.round(bd.distance/1000);
+      hours=Math.round(bd.duration/3600);
+      source='百度地图实测';
+    } else {
+      distance=Math.round(haversine(lat1,lng1,lat2,lng2)*1.3);
+      hours=Math.round(distance/t.speed+t.extraTime);
+      source='直线距离估算';
+    }
+  }
+
   const cost=Math.round(distance*t.costPerKm+t.baseCost);
-  const hours=Math.round(distance/t.speed+t.extraTime);
   let html=`<div class="cost-card">
     <div class="cost-route">${from} → ${to}</div>
-    <div class="cost-distance">📏 约 ${distance} 公里</div>
+    <div class="cost-distance">📏 约 ${distance} 公里 <span class="cost-source">（${source}）</span></div>
     <div class="cost-detail">
       <div class="cost-item"><span class="ci-label">出行方式</span><span class="ci-value">${t.name}（${t.note}）</span></div>
       <div class="cost-item"><span class="ci-label">预估花费</span><span class="ci-value cost-price">💰 约 ${cost} 元/人</span></div>
@@ -70,6 +122,7 @@ function calcCost(){
   if(mode==='plane'&&distance>2000) html+=`<p class="cost-tip">💡 长途机票实际可能有折扣，建议查携程/飞猪比价</p>`;
   if(mode==='gaotie'&&distance>1500) html+=`<p class="cost-tip">💡 超长距离可能无直达高铁，需中转</p>`;
   if(mode==='car'&&distance>1000) html+=`<p class="cost-tip">💡 超长自驾建议中途休息，疲劳驾驶危险</p>`;
+  if(source.includes('估算')) html+=`<p class="cost-tip">⚠️ 百度地图未可用，距离为估算值。请在百度地图控制台启用 JS API 并配置域名白名单</p>`;
   html+=`<p class="cost-disclaimer">* 花费为基于距离的估算，实际受季节、班次、油价等影响，仅供参考</p></div>`;
   result.innerHTML=html;
 }
