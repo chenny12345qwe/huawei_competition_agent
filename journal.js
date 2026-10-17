@@ -17,6 +17,7 @@
 //   alter table journals enable row level security;
 //   create policy "anon select" on journals for select using (true);
 //   create policy "anon insert" on journals for insert with check (true);
+//   create policy "anon delete" on journals for delete using (true);
 //
 // 演示说明：本项目使用 Supabase 免费配额 BaaS 提供公共存储，
 //   免费版存在访问与存储额度限制，仅供大赛作品演示，不作为正式线上服务。
@@ -290,13 +291,19 @@ async function showSquareDetail(id){
     const imgs=(j.images||[]).map(s=>`<img src="${s}">`).join('');
     const loc=j.loc||null;
     const mapHtml=(loc&&loc.lat)?`<div class="journal-detail-map" id="jDetailMap"></div><div class="d-loc">📍 ${escHtml(j.loc_name||j.locName||'标记位置')}</div>`:'';
+    const isMine=j.nickname===getNick();
+    const trashSvg='<svg class="trash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg>';
+    const delHtml=isMine?`<div class="d-actions"><button class="d-del" data-id="${j.id}">${trashSvg}<span>删除</span></button></div>`:'';
     document.getElementById('journalDetailContent').innerHTML=`
       <h3>${escHtml(j.title)}</h3>
       <div class="d-meta"><span class="journal-cat" style="background:${cat.color};color:${cat.text}">${cat.name}</span> 📍 ${escHtml(j.city||'')} · by ${escHtml(j.nickname||'匿名')} · ${new Date(j.created_at).toLocaleDateString('zh-CN')} · ${stars}</div>
       <div class="d-content">${escHtml(j.content||'')}</div>
       ${imgs?`<div class="d-imgs">${imgs}</div>`:''}
-      ${mapHtml}`;
+      ${mapHtml}
+      ${delHtml}`;
     document.getElementById('journalDetail').classList.remove('hidden');
+    const delBtn=document.querySelector('#journalDetailContent .d-del');
+    if(delBtn)delBtn.addEventListener('click',()=>deleteSquareJournal(j.id));
     if(loc&&loc.lat){
       setTimeout(()=>{
         const m=L.map('jDetailMap',{zoomControl:true,attributionControl:false}).setView([loc.lat,loc.lng],13);
@@ -308,6 +315,21 @@ async function showSquareDetail(id){
       },50);
     }
   }catch(e){alert('加载详情失败：'+e.message);}
+}
+
+async function deleteSquareJournal(id){
+  if(!confirm('确定删除这条手账？'))return;
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/journals?id=eq.${id}&nickname=eq.${encodeURIComponent(getNick())}`,{
+      method:'DELETE',
+      headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${SUPABASE_ANON_KEY}`}
+    });
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    document.getElementById('journalDetail').classList.add('hidden');
+    _squareLoaded=false;_squareOffset=0;_squareEnd=false;
+    document.getElementById('squareList').innerHTML='';
+    loadSquare();
+  }catch(e){alert('删除失败：'+e.message);}
 }
 
 function escHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
