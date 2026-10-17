@@ -41,13 +41,14 @@ function saveJournals(a){ localStorage.setItem(JOURNAL_KEY,JSON.stringify(a)); }
 function getNick(){ let n=localStorage.getItem(NICK_KEY); if(!n){n='旅人'+Math.random().toString(36).slice(2,6).toUpperCase();localStorage.setItem(NICK_KEY,n);} return n; }
 
 function initJournal(){
-  createCitySearch(document.getElementById('journalCity'),{placeholder:'搜索城市'});
+  createCitySearch(document.getElementById('journalCity'),{placeholder:'搜索城市',onPick:flyToCity});
   document.getElementById('journalNew').addEventListener('click',openJournalEditor);
   document.getElementById('journalCancel').addEventListener('click',closeJournalEditor);
   document.getElementById('journalSave').addEventListener('click',saveJournal);
   document.getElementById('journalPublish').addEventListener('click',publishJournal);
   document.getElementById('journalFilter').addEventListener('change',renderJournalList);
   document.getElementById('journalImgInput').addEventListener('change',handleImgUpload);
+  document.getElementById('journalLocName').addEventListener('input',_locDebounce);
   document.getElementById('journalDetailClose').addEventListener('click',()=>document.getElementById('journalDetail').classList.add('hidden'));
   document.getElementById('journalCatTags').addEventListener('click',e=>{
     const t=e.target.closest('.journal-cat-tag');if(!t)return;
@@ -117,6 +118,33 @@ function initPickMap(){
     _editLoc={lat:e.latlng.lat,lng:e.latlng.lng};
   });
   setTimeout(()=>_pickMap.invalidateSize(),100);
+}
+
+function _setMarker(lat,lng,zoom){
+  if(!_pickMap)return;
+  _pickMap.flyTo([lat,lng],zoom);
+  if(_pickMarker)_pickMarker.setLatLng([lat,lng]);
+  else _pickMarker=L.marker([lat,lng]).addTo(_pickMap);
+  _editLoc={lat,lng};
+}
+function flyToCity(city){
+  if(!CITY_COORDS[city])return;
+  const [lat,lng]=CITY_COORDS[city];
+  _setMarker(lat,lng,11);
+}
+// shortcut: Nominatim免费地理编码,国内覆盖一般且限1req/s,失败静默保持当前地图
+let _locTimer=null;
+function _locDebounce(){ clearTimeout(_locTimer); _locTimer=setTimeout(geocodeAndFly,600); }
+async function geocodeAndFly(){
+  const name=document.getElementById('journalLocName').value.trim();
+  if(!name||!_pickMap)return;
+  const city=document.getElementById('journalCity').value.trim();
+  const q=city?`${name},${city},中国`:`${name},中国`;
+  try{
+    const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=zh&q=${encodeURIComponent(q)}`);
+    const arr=await res.json();
+    if(arr[0])_setMarker(+arr[0].lat,+arr[0].lon,15);
+  }catch(e){}
 }
 
 // shortcut: 图片压缩为base64,公共广场直接存jsonb会吃Supabase配额,大图建议接Storage时升级
