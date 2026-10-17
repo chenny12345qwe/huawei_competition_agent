@@ -47,21 +47,23 @@
     <div id="photoGrid" class="photo-grid"></div>
   </section>
   <section id="costView" class="hidden" role="tabpanel">
-    <h2 class="view-title">💰 出行花费估算</h2>
-    <div class="cost-form">
-      <label>出发地 <select id="costFrom"></select></label>
-      <label>目的地 <select id="costTo"></select></label>
-      <label>出行方式 <select id="costMode">
-        <option value="plane">✈️ 飞机</option>
-        <option value="gaotie">🚄 高铁</option>
-        <option value="train">🚂 火车</option>
-        <option value="car">🚗 自驾</option>
-        <option value="bus">🚌 大巴</option>
-      </select></label>
-      <button id="costBtn">计算花费</button>
+    <div id="costMap" class="cost-map-bg"></div>
+    <div class="cost-overlay">
+      <h2 class="view-title">💰 出行花费估算</h2>
+      <div class="cost-form">
+        <label>出发地 <select id="costFrom"></select></label>
+        <label>目的地 <select id="costTo"></select></label>
+        <label>出行方式 <select id="costMode">
+          <option value="plane">✈️ 飞机</option>
+          <option value="gaotie">🚄 高铁</option>
+          <option value="train">🚂 火车</option>
+          <option value="car">🚗 自驾</option>
+          <option value="bus">🚌 大巴</option>
+        </select></label>
+        <button id="costBtn">计算花费</button>
+      </div>
+      <div id="costResult"></div>
     </div>
-    <div id="costResult"></div>
-    <div id="costMap" class="cost-map hidden"></div>
   </section>
 </main>
 <footer>共收录 <b id="cityCount"></b> 个旅游城市 · 攻略基于通用旅游知识整理，行前请核实实时信息</footer>

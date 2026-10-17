@@ -51,27 +51,30 @@ async function getOSRMDistance(from,to){
 }
 
 let _map=null, _routeLayer=null, _markers=[];
-function showRouteMap(from,to,osrmCoords){
-  const [lat1,lng1]=CITY_COORDS[from], [lat2,lng2]=CITY_COORDS[to];
+function updateMapPreview(from,to,osrmCoords){
+  const mapEl=document.getElementById('costMap');
+  if(!from||!to||from===to||mapEl.offsetWidth===0) return;
   if(!_map){
-    _map=L.map('costMap');
+    _map=L.map('costMap',{zoomControl:true,attributionControl:false});
     L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{
-      subdomains:['1','2','3','4'], attribution:'© 高德地图', maxZoom:18
+      subdomains:['1','2','3','4'], maxZoom:18
     }).addTo(_map);
   }
   _markers.forEach(m=>_map.removeLayer(m));
   if(_routeLayer){ _map.removeLayer(_routeLayer); _routeLayer=null; }
   _markers=[];
+  const [lat1,lng1]=CITY_COORDS[from], [lat2,lng2]=CITY_COORDS[to];
   _markers.push(L.marker([lat1,lng1]).addTo(_map).bindPopup('📍 '+from));
   _markers.push(L.marker([lat2,lng2]).addTo(_map).bindPopup('📍 '+to));
   if(osrmCoords){
     const latlngs=osrmCoords.map(c=>[c[1],c[0]]);
-    _routeLayer=L.polyline(latlngs,{color:'#3A67D4',weight:5,opacity:0.8}).addTo(_map);
-    _map.fitBounds(latlngs,{padding:[40,40]});
+    _routeLayer=L.polyline(latlngs,{color:'#3A67D4',weight:5,opacity:0.85}).addTo(_map);
+    _map.fitBounds(latlngs,{padding:[60,60]});
   } else {
-    _routeLayer=L.polyline([[lat1,lng1],[lat2,lng2]],{color:'#3A67D4',weight:3,opacity:0.6,dashArray:'8,12'}).addTo(_map);
-    _map.fitBounds([[lat1,lng1],[lat2,lng2]],{padding:[40,40]});
+    _routeLayer=L.polyline([[lat1,lng1],[lat2,lng2]],{color:'#3A67D4',weight:3,opacity:0.7,dashArray:'8,12'}).addTo(_map);
+    _map.fitBounds([[lat1,lng1],[lat2,lng2]],{padding:[60,60]});
   }
+  setTimeout(()=>_map.invalidateSize(),100);
 }
 
 function initCostCalc(){
@@ -81,6 +84,8 @@ function initCostCalc(){
     to.appendChild(new Option(c,c));
   });
   to.value='上海';
+  from.addEventListener('change',()=>updateMapPreview(from.value,to.value));
+  to.addEventListener('change',()=>updateMapPreview(from.value,to.value));
   document.getElementById('costBtn').addEventListener('click', calcCost);
 }
 
@@ -89,11 +94,10 @@ async function calcCost(){
   const to=document.getElementById('costTo').value;
   const mode=document.getElementById('costMode').value;
   const result=document.getElementById('costResult');
-  const mapEl=document.getElementById('costMap');
-  if(from===to){ result.innerHTML='<p class="cost-error">出发地和目的地相同，请重新选择</p>'; mapEl.classList.add('hidden'); return; }
+  if(from===to){ result.innerHTML='<p class="cost-error">出发地和目的地相同，请重新选择</p>'; return; }
 
   result.innerHTML='<p class="cost-tip">⏳ 正在获取路线…</p>';
-  mapEl.classList.add('hidden');
+  updateMapPreview(from,to,null);
 
   const [lat1,lng1]=CITY_COORDS[from], [lat2,lng2]=CITY_COORDS[to];
   const t=TRANSPORT[mode];
@@ -105,19 +109,16 @@ async function calcCost(){
     source='直线距离';
   } else {
     const osrm=await getOSRMDistance(from,to);
-    mapEl.classList.remove('hidden');
     if(osrm){
       distance=Math.round(osrm.distance/1000);
       hours=Math.round(osrm.duration/3600);
       source='OSRM实测路线';
-      showRouteMap(from,to,osrm.coords);
+      updateMapPreview(from,to,osrm.coords);
     } else {
       distance=Math.round(haversine(lat1,lng1,lat2,lng2)*1.3);
       hours=Math.round(distance/t.speed+t.extraTime);
       source='直线距离估算';
-      showRouteMap(from,to,null);
     }
-    setTimeout(()=>{ if(_map) _map.invalidateSize(); },100);
   }
 
   const cost=Math.round(distance*t.costPerKm+t.baseCost);
