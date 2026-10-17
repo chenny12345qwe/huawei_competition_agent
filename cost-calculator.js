@@ -1,5 +1,3 @@
-const BAIDU_AK = '5PDLRUD4exDVKbSuwdzRRdsX4GywtPks';
-
 const CITY_COORDS = {
   "北京":[39.9042,116.4074],"天津":[39.0842,117.2009],"承德":[40.9510,117.9622],
   "北戴河":[39.8350,119.4930],"大同":[40.0768,113.3001],"平遥":[37.1897,112.1756],
@@ -22,7 +20,6 @@ const CITY_COORDS = {
   "喀什":[39.4704,75.9898]
 };
 
-// shortcut: 百度地图JS API不可用时降级为直线距离×1.3
 function haversine(lat1,lng1,lat2,lng2){
   const R=6371, toRad=d=>d*Math.PI/180;
   const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
@@ -38,33 +35,43 @@ const TRANSPORT = {
   bus:{name:"🚌 大巴",costPerKm:0.3,baseCost:0,speed:70,extraTime:0.5,note:"长途大巴"}
 };
 
-let _bmap=null;
-function waitBMap(t=5000){
-  return new Promise(r=>{
-    if(window.BMap) return r(true);
-    const s=Date.now();
-    const c=setInterval(()=>{ if(window.BMap){clearInterval(c);r(true);} else if(Date.now()-s>t){clearInterval(c);r(false);} },100);
-  });
+// shortcut: OSRM公共服务器国内可能不稳定,失败时降级Haversine直线
+async function getOSRMDistance(from,to){
+  const [lat1,lng1]=CITY_COORDS[from], [lat2,lng2]=CITY_COORDS[to];
+  const url=`https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`;
+  try{
+    const res=await Promise.race([fetch(url),new Promise((_,r)=>setTimeout(()=>r(),8000))]);
+    if(!res) return null;
+    const data=await res.json();
+    if(data.code==='Ok'&&data.routes.length>0){
+      return {distance:data.routes[0].distance, duration:data.routes[0].duration, coords:data.routes[0].geometry.coordinates};
+    }
+  }catch(e){}
+  return null;
 }
 
-function getBaiduDistance(from,to){
-  return Promise.race([
-    new Promise(r=>{
-      try{
-        if(!_bmap) _bmap=new BMap.Map('costMap');
-        const [lat1,lng1]=CITY_COORDS[from], [lat2,lng2]=CITY_COORDS[to];
-        const s=new BMap.DrivingRoute(_bmap,{renderOptions:{map:_bmap,autoViewport:true}});
-        s.setSearchCompleteCallback(function(){
-          if(s.getStatus()===BMAP_STATUS_SUCCESS){
-            const p=s.getResults().getPlan(0);
-            r({distance:p.getDistance(false),duration:p.getDuration(false)});
-          } else r(null);
-        });
-        s.search(new BMap.Point(lng1,lat1),new BMap.Point(lng2,lat2));
-      }catch(e){r(null);}
-    }),
-    new Promise(r=>setTimeout(()=>r(null),8000))
-  ]);
+let _map=null, _routeLayer=null, _markers=[];
+function showRouteMap(from,to,osrmCoords){
+  const [lat1,lng1]=CITY_COORDS[from], [lat2,lng2]=CITY_COORDS[to];
+  if(!_map){
+    _map=L.map('costMap');
+    L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{
+      subdomains:['1','2','3','4'], attribution:'© 高德地图', maxZoom:18
+    }).addTo(_map);
+  }
+  _markers.forEach(m=>_map.removeLayer(m));
+  if(_routeLayer){ _map.removeLayer(_routeLayer); _routeLayer=null; }
+  _markers=[];
+  _markers.push(L.marker([lat1,lng1]).addTo(_map).bindPopup('📍 '+from));
+  _markers.push(L.marker([lat2,lng2]).addTo(_map).bindPopup('📍 '+to));
+  if(osrmCoords){
+    const latlngs=osrmCoords.map(c=>[c[1],c[0]]);
+    _routeLayer=L.polyline(latlngs,{color:'#3A67D4',weight:5,opacity:0.8}).addTo(_map);
+    _map.fitBounds(latlngs,{padding:[40,40]});
+  } else {
+    _routeLayer=L.polyline([[lat1,lng1],[lat2,lng2]],{color:'#3A67D4',weight:3,opacity:0.6,dashArray:'8,12'}).addTo(_map);
+    _map.fitBounds([[lat1,lng1],[lat2,lng2]],{padding:[40,40]});
+  }
 }
 
 function initCostCalc(){
@@ -97,22 +104,20 @@ async function calcCost(){
     hours=Math.round(distance/t.speed+t.extraTime);
     source='直线距离';
   } else {
-    const ok=await waitBMap();
-    let bd=null;
-    if(ok){
-      mapEl.classList.remove('hidden');
-      bd=await getBaiduDistance(from,to);
-    }
-    if(bd){
-      distance=Math.round(bd.distance/1000);
-      hours=Math.round(bd.duration/3600);
-      source='百度地图实测';
+    const osrm=await getOSRMDistance(from,to);
+    mapEl.classList.remove('hidden');
+    if(osrm){
+      distance=Math.round(osrm.distance/1000);
+      hours=Math.round(osrm.duration/3600);
+      source='OSRM实测路线';
+      showRouteMap(from,to,osrm.coords);
     } else {
-      mapEl.classList.add('hidden');
       distance=Math.round(haversine(lat1,lng1,lat2,lng2)*1.3);
       hours=Math.round(distance/t.speed+t.extraTime);
       source='直线距离估算';
+      showRouteMap(from,to,null);
     }
+    setTimeout(()=>{ if(_map) _map.invalidateSize(); },100);
   }
 
   const cost=Math.round(distance*t.costPerKm+t.baseCost);
@@ -128,7 +133,6 @@ async function calcCost(){
   if(mode==='plane'&&distance>2000) html+=`<p class="cost-tip">💡 长途机票实际可能有折扣，建议查携程/飞猪比价</p>`;
   if(mode==='gaotie'&&distance>1500) html+=`<p class="cost-tip">💡 超长距离可能无直达高铁，需中转</p>`;
   if(mode==='car'&&distance>1000) html+=`<p class="cost-tip">💡 超长自驾建议中途休息，疲劳驾驶危险</p>`;
-  if(source.includes('估算')) html+=`<p class="cost-tip">⚠️ 百度地图未可用，距离为估算值。请在百度地图控制台启用 JS API 并配置域名白名单</p>`;
   html+=`<p class="cost-disclaimer">* 花费为基于距离的估算，实际受季节、班次、油价等影响，仅供参考</p></div>`;
   result.innerHTML=html;
 }
