@@ -2,7 +2,7 @@ const app = document.getElementById('app');
 const CROWD_ICON = {family:"👨‍👩‍👧",couple:"💕",solo:"🧭",senior:"🌿",student:"🎒",photo:"📷",foodie:"🍜",outdoor:"⛰️"};
 const THEME_ICON = {nature:"🏔️",history:"🏛️",seaside:"🏖️",ancient:"🏚️",city:"🏙️",food:"🍴",outdoor:"🥾",folk:"🎭",culture:"🎨"};
 const SEASON_ICON = {spring:"🌸",summer:"☀️",autumn:"🍂",winter:"❄️"};
-const TABS = ['guide','trip','photo','cost'];
+const TABS = ['guide','trip','photo','cost','journal'];
 
 
 function goHome(){ document.getElementById('searchInput').value=''; renderHome(); }
@@ -13,6 +13,7 @@ function applyTab(tab){
   document.getElementById('tripView').classList.toggle('hidden', tab!=='trip');
   document.getElementById('photoWall').classList.toggle('hidden', tab!=='photo');
   document.getElementById('costView').classList.toggle('hidden', tab!=='cost');
+  document.getElementById('journalView').classList.toggle('hidden', tab!=='journal');
   TABS.forEach(t=>{
     const btn = document.getElementById('tab-'+t);
     btn.classList.toggle('active', t===tab);
