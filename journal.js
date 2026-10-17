@@ -4,8 +4,8 @@
 //   1) 登录 https://supabase.com 新建项目
 //   2) 在 SQL Editor 执行建表(见下方 SQL)
 //   3) 在 Project Settings > API 取 URL 和 anon public key，填入此处
-//   SUPABASE_URL 填你的项目 URL，例如 https://xxxx.supabase.co
-//   SUPABASE_ANON_KEY 填 anon public API Key
+//   SUPABASE_URL https://awsxyldbbasuvuselkxof.supabase.co，例如 https://xxxx.supabase.co
+//   SUPABASE_ANON_KEY 填 sb_publishable__NdocSIaLAb1hFxO6EVd7g_eQPD-gjV
 //
 // 建表 SQL：
 //   create table journals (
@@ -21,8 +21,8 @@
 // 演示说明：本项目使用 Supabase 免费配额 BaaS 提供公共存储，
 //   免费版存在访问与存储额度限制，仅供大赛作品演示，不作为正式线上服务。
 // ============================================================
-const SUPABASE_URL='';       // TODO: 填入你的 Supabase 项目 URL
-const SUPABASE_ANON_KEY='';  // TODO: 填入你的 Supabase anon public key
+const SUPABASE_URL='https://awsxyldbbasuvuselkxof.supabase.co';       // TODO: 填入你的 Supabase 项目 URL
+const SUPABASE_ANON_KEY='sb_publishable__NdocSIaLAb1hFxO6EVd7g_eQPD-gjV';  // TODO: 填入你的 Supabase anon public key
 
 const JOURNAL_KEY='travelJournals';
 const NICK_KEY='journalNick';
