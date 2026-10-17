@@ -47,22 +47,24 @@
     <div id="photoGrid" class="photo-grid"></div>
   </section>
   <section id="costView" class="hidden" role="tabpanel">
-    <div id="costMap" class="cost-map-bg"></div>
-    <div class="cost-overlay">
-      <h2 class="view-title">💰 出行花费估算</h2>
-      <div class="cost-form">
-        <label>出发地 <select id="costFrom"></select></label>
-        <label>目的地 <select id="costTo"></select></label>
-        <label>出行方式 <select id="costMode">
-          <option value="plane">✈️ 飞机</option>
-          <option value="gaotie">🚄 高铁</option>
-          <option value="train">🚂 火车</option>
-          <option value="car">🚗 自驾</option>
-          <option value="bus">🚌 大巴</option>
-        </select></label>
-        <button id="costBtn">计算花费</button>
+    <div class="cost-layout">
+      <div class="cost-panel">
+        <h2 class="view-title">💰 出行花费估算</h2>
+        <div class="cost-form">
+          <label>出发地 <select id="costFrom"></select></label>
+          <label>目的地 <select id="costTo"></select></label>
+          <label>出行方式 <select id="costMode">
+            <option value="plane">✈️ 飞机</option>
+            <option value="gaotie">🚄 高铁</option>
+            <option value="train">🚂 火车</option>
+            <option value="car">🚗 自驾</option>
+            <option value="bus">🚌 大巴</option>
+          </select></label>
+          <button id="costBtn">计算花费</button>
+        </div>
+        <div id="costResult"></div>
       </div>
-      <div id="costResult"></div>
+      <div id="costMap" class="cost-map-side"></div>
     </div>
   </section>
 </main>
