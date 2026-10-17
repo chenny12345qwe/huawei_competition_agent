@@ -51,7 +51,7 @@ async function getOSRMDistance(from,to){
 }
 
 let _map=null, _routeLayer=null, _markers=[];
-function updateMapPreview(from,to,osrmCoords){
+function updateMapPreview(from,to,osrmCoords,mode){
   const mapEl=document.getElementById('costMap');
   if(!from||!to||from===to||mapEl.offsetWidth===0) return;
   if(!_map){
@@ -66,26 +66,39 @@ function updateMapPreview(from,to,osrmCoords){
   const [lat1,lng1]=CITY_COORDS[from], [lat2,lng2]=CITY_COORDS[to];
   _markers.push(L.marker([lat1,lng1]).addTo(_map).bindPopup('📍 '+from));
   _markers.push(L.marker([lat2,lng2]).addTo(_map).bindPopup('📍 '+to));
+  let midLat,midLng;
   if(osrmCoords){
     const latlngs=osrmCoords.map(c=>[c[1],c[0]]);
-    _routeLayer=L.polyline(latlngs,{color:'#3A67D4',weight:5,opacity:0.85}).addTo(_map);
+    _routeLayer=L.polyline(latlngs,{color:'#5B8FF9',weight:5,opacity:0.9}).addTo(_map);
+    const mid=osrmCoords[Math.floor(osrmCoords.length/2)];
+    midLat=mid[1]; midLng=mid[0];
     _map.fitBounds(latlngs,{padding:[60,60]});
   } else {
-    _routeLayer=L.polyline([[lat1,lng1],[lat2,lng2]],{color:'#3A67D4',weight:3,opacity:0.7,dashArray:'8,12'}).addTo(_map);
+    _routeLayer=L.polyline([[lat1,lng1],[lat2,lng2]],{color:'#5B8FF9',weight:3,opacity:0.8,dashArray:'8,12'}).addTo(_map);
+    midLat=(lat1+lat2)/2; midLng=(lng1+lng2)/2;
     _map.fitBounds([[lat1,lng1],[lat2,lng2]],{padding:[60,60]});
+  }
+  if(mode){
+    const emoji={plane:'✈️',gaotie:'🚄',train:'🚂',car:'🚗',bus:'🚌'}[mode];
+    if(emoji){
+      const icon=L.divIcon({className:'cost-mode-icon',html:`<span class="mode-emoji">${emoji}</span>`,iconSize:[44,44],iconAnchor:[22,22]});
+      _markers.push(L.marker([midLat,midLng],{icon}).addTo(_map));
+    }
   }
   setTimeout(()=>_map.invalidateSize(),100);
 }
 
 function initCostCalc(){
-  const from=document.getElementById('costFrom'), to=document.getElementById('costTo');
+  const from=document.getElementById('costFrom'), to=document.getElementById('costTo'), mode=document.getElementById('costMode');
   Object.keys(CITY_COORDS).sort().forEach(c=>{
     from.appendChild(new Option(c,c));
     to.appendChild(new Option(c,c));
   });
   to.value='上海';
-  from.addEventListener('change',()=>updateMapPreview(from.value,to.value));
-  to.addEventListener('change',()=>updateMapPreview(from.value,to.value));
+  const onChan=()=>updateMapPreview(from.value,to.value,null,mode.value);
+  from.addEventListener('change',onChan);
+  to.addEventListener('change',onChan);
+  mode.addEventListener('change',onChan);
   document.getElementById('costBtn').addEventListener('click', calcCost);
 }
 
@@ -97,7 +110,7 @@ async function calcCost(){
   if(from===to){ result.innerHTML='<p class="cost-error">出发地和目的地相同，请重新选择</p>'; return; }
 
   result.innerHTML='<p class="cost-tip">⏳ 正在获取路线…</p>';
-  updateMapPreview(from,to,null);
+  updateMapPreview(from,to,null,mode);
 
   const [lat1,lng1]=CITY_COORDS[from], [lat2,lng2]=CITY_COORDS[to];
   const t=TRANSPORT[mode];
@@ -113,7 +126,7 @@ async function calcCost(){
       distance=Math.round(osrm.distance/1000);
       hours=Math.round(osrm.duration/3600);
       source='OSRM实测路线';
-      updateMapPreview(from,to,osrm.coords);
+      updateMapPreview(from,to,osrm.coords,mode);
     } else {
       distance=Math.round(haversine(lat1,lng1,lat2,lng2)*1.3);
       hours=Math.round(distance/t.speed+t.extraTime);
