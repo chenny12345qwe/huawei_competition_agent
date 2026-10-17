@@ -28,7 +28,7 @@
   <div id="app"></div>
   <section id="tripView" class="hidden" role="tabpanel">
     <h2 class="view-title">🗺️ 多城市行程切换</h2>
-    <div id="cityTabs" class="city-tabs"></div>
+    <div class="trip-search-bar"><input id="tripCitySearch" class="city-search-input" placeholder="搜索城市，如 北京、三亚" autocomplete="off"></div>
     <div id="tripApp"></div>
   </section>
   <section id="photoWall" class="hidden" role="tabpanel">
@@ -52,8 +52,8 @@
       <div class="cost-panel">
         <h2 class="view-title">💰 出行花费估算</h2>
         <div class="cost-form">
-          <label>出发地 <select id="costFrom"></select></label>
-          <label>目的地 <select id="costTo"></select></label>
+          <label>出发地 <input id="costFrom" class="city-search-input" autocomplete="off" placeholder="搜索城市"></label>
+          <label>目的地 <input id="costTo" class="city-search-input" autocomplete="off" placeholder="搜索城市"></label>
           <label>出行方式 <select id="costMode">
             <option value="plane">✈️ 飞机</option>
             <option value="gaotie">🚄 高铁</option>
@@ -70,18 +70,29 @@
   </section>
   <section id="journalView" class="hidden" role="tabpanel">
     <h2 class="view-title">📔 旅行手账</h2>
-    <div class="journal-toolbar">
-      <button class="journal-new-btn" id="journalNew">✏️ 写手账</button>
-      <select id="journalFilter" class="journal-filter">
-        <option value="all">全部</option>
-        <option value="food">🍜 美食</option>
-        <option value="sight">🏞️ 景点</option>
-        <option value="experience">🎉 体验</option>
-        <option value="hotel">🏨 住宿</option>
-        <option value="tips">💡 贴士</option>
-      </select>
+    <div class="journal-subtabs">
+      <button class="journal-subtab active" id="subtabMine">📔 我的手账</button>
+      <button class="journal-subtab" id="subtabSquare">🌐 公共广场</button>
     </div>
-    <div id="journalList" class="journal-grid"></div>
+    <div id="journalMine">
+      <div class="journal-toolbar">
+        <button class="journal-new-btn" id="journalNew">✏️ 写手账</button>
+        <select id="journalFilter" class="journal-filter">
+          <option value="all">全部</option>
+          <option value="food">🍜 美食</option>
+          <option value="sight">🏞️ 景点</option>
+          <option value="experience">🎉 体验</option>
+          <option value="hotel">🏨 住宿</option>
+          <option value="tips">💡 贴士</option>
+        </select>
+      </div>
+      <div id="journalList" class="journal-grid"></div>
+    </div>
+    <div id="journalSquare" class="hidden">
+      <p class="square-note">🌐 公共广场由 Supabase 免费配额提供公共存储，所有访客共享。免费版有访问与存储额度限制，仅供大赛作品演示，不作为正式线上服务。</p>
+      <div id="squareList" class="journal-grid"></div>
+      <div id="squareSentinel" class="square-sentinel"></div>
+    </div>
   </section>
 </main>
 <div id="journalEditor" class="journal-modal hidden">
@@ -95,7 +106,7 @@
       <button class="journal-cat-tag" data-cat="hotel">🏨 住宿</button>
       <button class="journal-cat-tag" data-cat="tips">💡 贴士</button>
     </div>
-    <select id="journalCity" class="journal-input"></select>
+    <input id="journalCity" class="city-search-input" placeholder="搜索城市" autocomplete="off">
     <textarea id="journalContent" class="journal-textarea" placeholder="分享你的旅行故事..." rows="5"></textarea>
     <label class="journal-upload-btn">📷 添加图片<input type="file" id="journalImgInput" multiple accept="image/*" hidden></label>
     <div id="journalImgPreview" class="journal-img-preview"></div>
@@ -104,7 +115,8 @@
     <input id="journalLocName" class="journal-input" placeholder="位置名称（如：故宫博物院）">
     <div class="journal-rating-row"><span>评分</span><div id="journalRating" class="journal-rating"></div></div>
     <div class="journal-modal-actions">
-      <button id="journalSave" class="journal-save-btn">保存</button>
+      <button id="journalSave" class="journal-save-btn">💾 存本地</button>
+      <button id="journalPublish" class="journal-publish-btn">🌐 发布到广场</button>
       <button id="journalCancel" class="journal-cancel-btn">取消</button>
     </div>
   </div>
@@ -115,10 +127,11 @@
     <button id="journalDetailClose" class="journal-cancel-btn" style="margin-top:16px">关闭</button>
   </div>
 </div>
-<footer>共收录 <b id="cityCount"></b> 个旅游城市 · 攻略基于通用旅游知识整理，行前请核实实时信息</footer>
+<footer>共收录 <b id="cityCount"></b> 个旅游城市 · 攻略基于通用旅游知识整理，行前请核实实时信息<br>手账公共广场演示使用 Supabase 免费配额 BaaS，仅供大赛作品演示</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data.js?v=2"></script>
 <script src="trip-data.js?v=2"></script>
+<script src="city-utils.js?v=2"></script>
 <script src="app.js?v=2"></script>
 <script src="trip-app.js?v=2"></script>
 <script src="photo-wall.js?v=2"></script>

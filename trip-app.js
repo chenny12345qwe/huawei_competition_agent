@@ -1,23 +1,10 @@
 const tripApp = document.getElementById('tripApp');
-const tabs = document.getElementById('cityTabs');
 let currentCity = '';
 
-tabs.addEventListener('click', e=>{
-  const t = e.target.closest('[data-city]'); if(!t) return;
-  selectCity(t.dataset.city);
-});
-
-function renderTabs(){
-  tabs.innerHTML = TRIP_DATA.cities.map(c =>
-    `<button class="city-tab ${c.city===currentCity?'active':''}" data-city="${c.city}">${c.city}</button>`
-  ).join('');
-}
-
 function selectCity(city){
-  currentCity = city;
-  renderTabs();
   const data = TRIP_DATA.cities.find(c => c.city === city);
   if(!data) return;
+  currentCity = city;
   let html = `<h2>${city} · 共 ${data.trips.length} 条行程</h2><div class="trip-grid">`;
   data.trips.forEach(t => {
     html += `<div class="trip-card">
@@ -32,4 +19,10 @@ function selectCity(city){
   window.scrollTo(0, 0);
 }
 
+createCitySearch(document.getElementById('tripCitySearch'), {
+  list: TRIP_DATA.cities.map(c=>c.city),
+  current: TRIP_DATA.cities[0].city,
+  placeholder: '搜索城市，如 北京、三亚',
+  onPick: selectCity
+});
 selectCity(TRIP_DATA.cities[0].city);

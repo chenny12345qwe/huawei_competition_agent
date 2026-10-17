@@ -90,15 +90,10 @@ function updateMapPreview(from,to,osrmCoords,mode){
 
 function initCostCalc(){
   const from=document.getElementById('costFrom'), to=document.getElementById('costTo'), mode=document.getElementById('costMode');
-  Object.keys(CITY_COORDS).sort().forEach(c=>{
-    from.appendChild(new Option(c,c));
-    to.appendChild(new Option(c,c));
-  });
-  to.value='上海';
-  const onChan=()=>updateMapPreview(from.value,to.value,null,mode.value);
-  from.addEventListener('change',onChan);
-  to.addEventListener('change',onChan);
-  mode.addEventListener('change',onChan);
+  createCitySearch(from,{current:'北京',placeholder:'搜索出发城市',onPick:c=>updateMapPreview(c,to.value,null,mode.value)});
+  createCitySearch(to,{current:'上海',placeholder:'搜索目的城市',onPick:c=>updateMapPreview(from.value,c,null,mode.value)});
+  const onMode=()=>updateMapPreview(from.value,to.value,null,mode.value);
+  mode.addEventListener('change',onMode);
   document.getElementById('costBtn').addEventListener('click', calcCost);
 }
 
@@ -108,6 +103,7 @@ async function calcCost(){
   const mode=document.getElementById('costMode').value;
   const result=document.getElementById('costResult');
   if(from===to){ result.innerHTML='<p class="cost-error">出发地和目的地相同，请重新选择</p>'; return; }
+  if(!CITY_COORDS[from]||!CITY_COORDS[to]){ result.innerHTML='<p class="cost-error">请从下拉建议中选择有效城市</p>'; return; }
 
   result.innerHTML='<p class="cost-tip">⏳ 正在获取路线…</p>';
   updateMapPreview(from,to,null,mode);
