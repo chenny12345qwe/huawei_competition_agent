@@ -154,17 +154,17 @@ function transitBetween(a, b){
 const AMAP_WEB_KEY='9476e96a46c4f89e69918fe0d78a854a';
 const _spotImgCache=new Map();
 async function _fetchSpotPhoto(city, spot){
-  const kw=encodeURIComponent(spot.replace(/夜景|晨景|日落|日出|夜市|附近|周边|沿线|景区$/g,'').trim()||spot);
-  const base=`https://restapi.amap.com/v3/place/text?keywords=${kw}&city=${encodeURIComponent(city)}&citylimit=true&extensions=all&offset=1&key=${AMAP_WEB_KEY}`;
-  for(const url of [base+'&types=050000', base]){
-    try{
-      const r=await fetch(url);
-      const d=await r.json();
-      const p=d.pois&&d.pois[0]&&d.pois[0].photos&&d.pois[0].photos[0];
-      if(p&&p.url)return p.url;
-    }catch(e){}
-  }
-  return null;
+  const core=spot.replace(/夜景|晨景|日落|日出|夜市|附近|周边|沿线|景区$/g,'').trim()||spot;
+  const url=`https://restapi.amap.com/v3/place/text?keywords=${encodeURIComponent(core)}&city=${encodeURIComponent(city)}&citylimit=true&extensions=all&offset=20&key=${AMAP_WEB_KEY}`;
+  try{
+    const r=await fetch(url);
+    const d=await r.json();
+    if(!d.pois||!d.pois.length)return null;
+    const withPhoto=d.pois.filter(p=>p.photos&&p.photos[0]);
+    if(!withPhoto.length)return null;
+    const match=withPhoto.filter(p=>p.name.includes(core)).sort((a,b)=>a.name.length-b.name.length)[0]||withPhoto[0];
+    return match.photos[0].url;
+  }catch(e){return null;}
 }
 async function loadSpotImages(){
   if(!AMAP_WEB_KEY)return;
