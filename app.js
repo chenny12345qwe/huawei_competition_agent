@@ -140,6 +140,7 @@ function showDetail(id){
   html += `</div>`;
   app.innerHTML = html;
 
+  loadSpotImages();
   window.scrollTo(0,0);
 }
 
@@ -149,6 +150,25 @@ function transitBetween(a, b){
   const far = /山|长城|湖|岛|湾|寺|陵|遗址|景区|瀑布|峡谷|湿地|森林公园|天池/.test(a+b);
   return far ? '🚕 打车/公交 约40-60分钟' : '🚇 地铁/步行 约20-30分钟';
 }
+// 高德 Web 服务 key：去 https://lbs.amap.com 控制台→应用管理→创建key→服务平台选"Web服务"，填入此处
+const AMAP_WEB_KEY='';
+const _spotImgCache=new Map();
+async function loadSpotImages(){
+  if(!AMAP_WEB_KEY)return;
+  document.querySelectorAll('.spot-img:not([data-loaded])').forEach(async box=>{
+    box.setAttribute('data-loaded','1');
+    const city=box.dataset.city, spot=box.dataset.spot, key=city+'|'+spot;
+    if(_spotImgCache.has(key)){box.innerHTML=_spotImgCache.get(key);return;}
+    box.textContent='加载图…';
+    try{
+      const r=await fetch(`https://restapi.amap.com/v3/place/text?keywords=${encodeURIComponent(spot)}&city=${encodeURIComponent(city)}&extensions=all&offset=1&key=${AMAP_WEB_KEY}`);
+      const d=await r.json();
+      const url=d.pois&&d.pois[0]&&d.pois[0].photos&&d.pois[0].photos[0]&&d.pois[0].photos[0].url;
+      if(url){const h=`<img src="${url}" loading="lazy" alt="${spot}">`;_spotImgCache.set(key,h);box.innerHTML=h;}else box.textContent='';
+    }catch(e){box.textContent='';}
+  });
+}
+
 function renderRoute(routeText, cityName){
   const days = routeText.split(/[；;。]/).filter(s=>s.trim());
   return days.map(dayStr=>{
@@ -159,7 +179,7 @@ function renderRoute(routeText, cityName){
     let h = `<div class="route-day">第 ${dayNum} 天</div><div class="route-spots">`;
     spots.forEach((sp,i)=>{
       const clean = sp.replace(/[（(].*?[)）]/g,'').trim();
-      h += `<div class="spot"><div class="spot-name">${sp}</div></div>`;
+      h += `<div class="spot"><div class="spot-name">${sp}</div><div class="spot-img" data-city="${cityName}" data-spot="${clean}"></div></div>`;
       if(i < spots.length-1) h += `<div class="transit">${transitBetween(spots[i],spots[i+1])}</div>`;
     });
     return h + `</div>`;
