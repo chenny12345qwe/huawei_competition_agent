@@ -70,29 +70,18 @@
   </section>
   <section id="journalView" class="hidden" role="tabpanel">
     <h2 class="view-title">📔 旅行手账</h2>
-    <div class="journal-subtabs">
-      <button class="journal-subtab active" id="subtabMine">📔 我的手账</button>
-      <button class="journal-subtab" id="subtabSquare">🌐 公共广场</button>
+    <div class="journal-toolbar">
+      <button class="journal-new-btn" id="journalNew">✏️ 写手账</button>
+      <select id="journalFilter" class="journal-filter">
+        <option value="all">全部</option>
+        <option value="food">🍜 美食</option>
+        <option value="sight">🏞️ 景点</option>
+        <option value="experience">🎉 体验</option>
+        <option value="hotel">🏨 住宿</option>
+        <option value="tips">💡 贴士</option>
+      </select>
     </div>
-    <div id="journalMine">
-      <div class="journal-toolbar">
-        <button class="journal-new-btn" id="journalNew">✏️ 写手账</button>
-        <select id="journalFilter" class="journal-filter">
-          <option value="all">全部</option>
-          <option value="food">🍜 美食</option>
-          <option value="sight">🏞️ 景点</option>
-          <option value="experience">🎉 体验</option>
-          <option value="hotel">🏨 住宿</option>
-          <option value="tips">💡 贴士</option>
-        </select>
-      </div>
-      <div id="journalList" class="journal-grid"></div>
-    </div>
-    <div id="journalSquare" class="hidden">
-      <p class="square-note">🌐 公共广场由 Supabase 免费配额提供公共存储，所有访客共享。免费版有访问与存储额度限制，仅供大赛作品演示，不作为正式线上服务。</p>
-      <div id="squareList" class="journal-grid"></div>
-      <div id="squareSentinel" class="square-sentinel"></div>
-    </div>
+    <div id="journalList" class="journal-grid"></div>
   </section>
 </main>
 <div id="journalEditor" class="journal-modal hidden">
@@ -115,8 +104,7 @@
     <input id="journalLocName" class="journal-input" placeholder="位置名称（如：故宫博物院）">
     <div class="journal-rating-row"><span>评分</span><div id="journalRating" class="journal-rating"></div></div>
     <div class="journal-modal-actions">
-      <button id="journalSave" class="journal-save-btn">💾 存本地</button>
-      <button id="journalPublish" class="journal-publish-btn">🌐 发布到广场</button>
+      <button id="journalSave" class="journal-save-btn">保存</button>
       <button id="journalCancel" class="journal-cancel-btn">取消</button>
     </div>
   </div>
@@ -127,7 +115,7 @@
     <button id="journalDetailClose" class="journal-cancel-btn" style="margin-top:16px">关闭</button>
   </div>
 </div>
-<footer>共收录 <b id="cityCount"></b> 个旅游城市 · 攻略基于通用旅游知识整理，行前请核实实时信息<br>手账公共广场演示使用 Supabase 免费配额 BaaS，仅供大赛作品演示</footer>
+<footer>共收录 <b id="cityCount"></b> 个旅游城市 · 攻略基于通用旅游知识整理，行前请核实实时信息</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data.js?v=2"></script>
 <script src="trip-data.js?v=2"></script>
