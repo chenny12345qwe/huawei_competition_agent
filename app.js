@@ -153,6 +153,19 @@ function transitBetween(a, b){
 // 高德 Web 服务 key：去 https://lbs.amap.com 控制台→应用管理→创建key→服务平台选"Web服务"，填入此处
 const AMAP_WEB_KEY='9476e96a46c4f89e69918fe0d78a854a';
 const _spotImgCache=new Map();
+async function _fetchSpotPhoto(city, spot){
+  const kw=encodeURIComponent(spot.replace(/夜景|晨景|日落|日出|夜市|附近|周边|沿线|景区$/g,'').trim()||spot);
+  const base=`https://restapi.amap.com/v3/place/text?keywords=${kw}&city=${encodeURIComponent(city)}&citylimit=true&extensions=all&offset=1&key=${AMAP_WEB_KEY}`;
+  for(const url of [base+'&types=050000', base]){
+    try{
+      const r=await fetch(url);
+      const d=await r.json();
+      const p=d.pois&&d.pois[0]&&d.pois[0].photos&&d.pois[0].photos[0];
+      if(p&&p.url)return p.url;
+    }catch(e){}
+  }
+  return null;
+}
 async function loadSpotImages(){
   if(!AMAP_WEB_KEY)return;
   document.querySelectorAll('.spot-img:not([data-loaded])').forEach(async box=>{
@@ -160,12 +173,8 @@ async function loadSpotImages(){
     const city=box.dataset.city, spot=box.dataset.spot, key=city+'|'+spot;
     if(_spotImgCache.has(key)){box.innerHTML=_spotImgCache.get(key);return;}
     box.textContent='加载图…';
-    try{
-      const r=await fetch(`https://restapi.amap.com/v3/place/text?keywords=${encodeURIComponent(spot)}&city=${encodeURIComponent(city)}&extensions=all&offset=1&key=${AMAP_WEB_KEY}`);
-      const d=await r.json();
-      const url=d.pois&&d.pois[0]&&d.pois[0].photos&&d.pois[0].photos[0]&&d.pois[0].photos[0].url;
-      if(url){const h=`<img src="${url}" loading="lazy" alt="${spot}">`;_spotImgCache.set(key,h);box.innerHTML=h;}else box.textContent='';
-    }catch(e){box.textContent='';}
+    const url=await _fetchSpotPhoto(city, spot);
+    if(url){const h=`<img src="${url}" loading="lazy" alt="${spot}">`;_spotImgCache.set(key,h);box.innerHTML=h;}else box.textContent='';
   });
 }
 
