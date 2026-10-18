@@ -151,7 +151,7 @@ function transitBetween(a, b){
   return far ? '🚕 打车/公交 约40-60分钟' : '🚇 地铁/步行 约20-30分钟';
 }
 // 高德 Web 服务 key：去 https://lbs.amap.com 控制台→应用管理→创建key→服务平台选"Web服务"，填入此处
-const AMAP_WEB_KEY='';
+const AMAP_WEB_KEY='9476e96a46c4f89e69918fe0d78a854a';
 const _spotImgCache=new Map();
 async function loadSpotImages(){
   if(!AMAP_WEB_KEY)return;
