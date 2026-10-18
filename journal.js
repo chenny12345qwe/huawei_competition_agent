@@ -209,9 +209,9 @@ async function publishJournal(){
     const res=await fetch(`${SUPABASE_URL}/rest/v1/journals`,{
       method:'POST',
       headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${SUPABASE_ANON_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},
-      body:JSON.stringify({...d,nickname:getNick()})
+      body:JSON.stringify({title:d.title,content:d.content,cat:d.cat,city:d.city,images:d.images,rating:d.rating,loc:d.loc,loc_name:d.locName,nickname:getNick()})
     });
-    if(!res.ok)throw new Error('HTTP '+res.status);
+    if(!res.ok){const t=await res.text();throw new Error('HTTP '+res.status+' '+t);}
     alert('✅ 已发布到公共广场');
     closeJournalEditor();
     _squareLoaded=false;_squareOffset=0;_squareEnd=false;
@@ -233,7 +233,7 @@ async function loadSquare(){
     const res=await fetch(`${SUPABASE_URL}/rest/v1/journals?select=*&order=created_at.desc&limit=20&offset=${_squareOffset}`,{
       headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${SUPABASE_ANON_KEY}`}
     });
-    if(!res.ok)throw new Error('HTTP '+res.status);
+    if(!res.ok){const t=await res.text();throw new Error('HTTP '+res.status+' '+t);}
     const rows=await res.json();
     _squareLoaded=true;
     if(_squareOffset===0)box.innerHTML='';
