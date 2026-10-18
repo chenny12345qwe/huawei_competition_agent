@@ -206,18 +206,26 @@ async function publishJournal(){
   const d=collectEditData();if(!d)return;
   const btn=document.getElementById('journalPublish');btn.disabled=true;btn.textContent='发布中…';
   try{
+    const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),15000);
     const res=await fetch(`${SUPABASE_URL}/rest/v1/journals`,{
       method:'POST',
       headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${SUPABASE_ANON_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},
-      body:JSON.stringify({title:d.title,content:d.content,cat:d.cat,city:d.city,images:d.images,rating:d.rating,loc:d.loc,loc_name:d.locName,nickname:getNick()})
+      body:JSON.stringify({title:d.title,content:d.content,cat:d.cat,city:d.city,images:d.images,rating:d.rating,loc:d.loc,loc_name:d.locName,nickname:getNick()}),
+      signal:ctrl.signal
     });
+    clearTimeout(timer);
     if(!res.ok){const t=await res.text();throw new Error('HTTP '+res.status+' '+t);}
     alert('✅ 已发布到公共广场');
     closeJournalEditor();
     _squareLoaded=false;_squareOffset=0;_squareEnd=false;
     if(!document.getElementById('journalSquare').classList.contains('hidden'))loadSquare();
     else switchSubtab('square');
-  }catch(e){alert('发布失败：'+e.message+'\n（可能是 Supabase 配额或网络问题）');}
+  }catch(e){
+    let msg=e.message;
+    if(e.name==='AbortError')msg='请求超时(15s)。Supabase 免费项目可能已暂停，请登录 supabase.com 在 Dashboard 点 Restore';
+    else if(e.message==='Failed to fetch')msg='无法连接 Supabase。可能原因: ①免费项目已暂停(登录 supabase.com Restore) ②网络无法访问海外服务器 ③CORS 被拦截。请 F12 打开 Network 面板查看请求状态';
+    alert('发布失败：'+msg);
+  }
   finally{btn.disabled=false;btn.textContent='🌐 发布到广场';}
 }
 
