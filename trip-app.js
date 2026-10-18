@@ -12,6 +12,7 @@ function selectCity(city){
         <div class="trip-day">Day ${t.day}</div>
         <div class="trip-spot">${t.spot}</div>
         <div class="trip-intro">${t.intro}</div>
+        <span class="src-tag">平台参考价</span>
       </div>
     </div>`;
   });

@@ -12,7 +12,7 @@ body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:var(--blu
 .hidden{display:none!important}
 .tag-card,.city-card,.season-btn,.back,.nav-tab,.city-tab,.logo,.search-box button{touch-action:manipulation}
 
-.loading-overlay{position:fixed;inset:0;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;z-index:9999;font-size:18px;color:var(--ink-soft)}
+.loading-overlay{position:fixed;inset:0;background:var(--blue-bg);z-index:9999;padding:24px;overflow:auto}
 
 .topbar{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.88);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;padding:14px 28px;box-shadow:0 1px 0 var(--line);flex-wrap:wrap;gap:12px}
 .logo{font-size:22px;font-weight:700;color:var(--blue-deep);cursor:pointer;border:none;background:none;font-family:inherit;text-align:left;padding:0;transition:opacity .2s}
@@ -86,12 +86,7 @@ footer{text-align:center;padding:24px;color:var(--ink-soft);font-size:13px}
 #photoWall h3{color:var(--ink);margin-bottom:12px;font-weight:600}
 .upload-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:16px}
 .upload-bar label{font-size:13px;cursor:pointer}
-.vis-field{display:flex;align-items:center;gap:8px;border:none;margin:0;padding:0}
-.vis-field legend{font-size:12px;color:var(--ink-soft);padding:0}
 .cam-tip{font-size:12px;color:var(--ink-soft)}
-.token-tip{display:block;width:100%;font-size:11px;color:#B5731A}
-#photoToken{padding:6px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);font-size:13px;outline:none}
-#photoToken:focus{border-color:var(--blue)}
 .photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
 .photo-item{border-radius:var(--radius-sm);overflow:hidden;box-shadow:var(--shadow);transition:.25s}
 .photo-item:hover{box-shadow:var(--shadow-lg)}
@@ -100,6 +95,7 @@ footer{text-align:center;padding:24px;color:var(--ink-soft);font-size:13px}
 
 .nav-tabs{display:flex;gap:8px}
 .nav-tab{padding:7px 18px;border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--card);color:var(--ink);cursor:pointer;font-size:14px;transition:.25s;font-weight:500}
+.nav-tab .ic{width:16px;height:16px;vertical-align:-3px;margin-right:4px}
 .nav-tab:hover{border-color:var(--blue);color:var(--blue-deep)}
 .nav-tab.active{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(107,164,216,.3)}
 
@@ -133,10 +129,20 @@ footer{text-align:center;padding:24px;color:var(--ink-soft);font-size:13px}
 .cost-distance{font-size:15px;color:var(--blue-deep);margin-bottom:16px;font-weight:600}
 .cost-source{font-size:12px;color:var(--ink-soft);font-weight:400}
 .cost-detail{display:flex;flex-direction:column;gap:12px}
-.cost-item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#fff;border-radius:var(--radius-sm);border:1px solid var(--line)}
+.cost-item{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;padding:12px 16px;background:#fff;border-radius:var(--radius-sm);border:1px solid var(--line)}
 .ci-label{font-size:13px;color:var(--ink-soft);font-weight:600}
 .ci-value{font-size:15px;color:var(--ink);font-weight:700}
 .cost-price{color:var(--blue-deep);font-size:18px}
+.cost-basis{width:100%;margin-top:4px;font-size:12px;color:var(--ink-soft);font-weight:400;line-height:1.5}
+.cost-breakdown{margin:16px 0}
+.cost-bd-title{font-size:15px;color:var(--ink);margin-bottom:10px;font-weight:700}
+.cost-tiers{display:flex;gap:12px;margin-top:18px}
+.cost-tier{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border-radius:var(--radius-sm);border:1px solid var(--line)}
+.cost-tier-low{background:#EEF6EC;border-color:#D4E8CC}
+.cost-tier-mid{background:var(--blue-light);border-color:#D4E6F4}
+.cost-tier-high{background:#FFF3E6;border-color:#F5D9B8}
+.ct-label{font-size:13px;color:var(--ink-soft);font-weight:600}
+.ct-value{font-size:18px;font-weight:700;color:var(--ink)}
 .cost-tip{margin-top:14px;padding:10px 14px;background:#FFF9E6;border-radius:var(--radius-sm);font-size:13px;color:#B5731A}
 .cost-error{color:#D9534F;font-size:14px;font-weight:600}
 .cost-disclaimer{margin-top:14px;font-size:12px;color:var(--ink-soft)}
@@ -241,3 +247,19 @@ footer{text-align:center;padding:24px;color:var(--ink-soft);font-size:13px}
   .city-card,.tag-card{padding:16px}
   .detail h2{font-size:22px}
 }
+/* 数据来源标签 */
+.src-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:var(--radius-pill);background:#EEF6EC;color:#3A8A3A;font-weight:500;margin-left:6px;vertical-align:1px}
+.chip.trip{background:#F0EAF8;color:#6B4FA0}
+.detail-trips{margin-top:20px}
+
+/* 骨架屏 */
+.sk{max-width:900px;margin:0 auto;padding:20px}
+.sk-line{height:20px;border-radius:6px;margin-bottom:14px}
+.sk-title{width:60%}
+.sk-sub{width:40%;height:14px}
+.sk-tags{display:flex;gap:12px;margin-bottom:24px}
+.sk-tag{width:120px;height:70px;border-radius:var(--radius-sm)}
+.sk-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.sk-card{height:120px;border-radius:var(--radius)}
+.sk-line,.sk-tag,.sk-card{background:linear-gradient(90deg,var(--warm) 25%,var(--warm-deep) 37%,var(--warm) 63%);background-size:400% 100%;animation:sk 1.4s ease infinite}
+@keyframes sk{0%{background-position:100% 0}100%{background-position:-100% 0}}

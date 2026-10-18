@@ -9,15 +9,15 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
-<div id="loading" class="loading-overlay">⏳ 加载中…</div>
+<div id="loading" class="loading-overlay"><div class="sk"><div class="sk-line sk-title"></div><div class="sk-line sk-sub"></div><div class="sk-tags"><span class="sk-tag"></span><span class="sk-tag"></span><span class="sk-tag"></span><span class="sk-tag"></span></div><div class="sk-cards"><div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div></div></div></div>
 <header class="topbar">
   <button class="logo" id="logo" aria-label="返回攻略首页">游哪儿 <span>· 不知道去哪儿？帮你选</span></button>
   <nav class="nav-tabs" role="tablist">
-    <button class="nav-tab active" id="tab-guide" role="tab" aria-selected="true">🏠 攻略</button>
-    <button class="nav-tab" id="tab-trip" role="tab" aria-selected="false">🗺️ 行程</button>
-    <button class="nav-tab" id="tab-photo" role="tab" aria-selected="false">📸 晒图</button>
-    <button class="nav-tab" id="tab-cost" role="tab" aria-selected="false">💰 花费</button>
-    <button class="nav-tab" id="tab-journal" role="tab" aria-selected="false">📔 手账</button>
+    <button class="nav-tab active" id="tab-guide" role="tab" aria-selected="true"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 9v11h14V9"/></svg> 攻略</button>
+    <button class="nav-tab" id="tab-trip" role="tab" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3,6 9,4 15,6 21,4 21,18 15,20 9,18 3,20"/><line x1="9" y1="4" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="20"/></svg> 行程</button>
+    <button class="nav-tab" id="tab-photo" role="tab" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l2-2h6l2 2h3v13H4z"/><circle cx="12" cy="13" r="4"/></svg> 晒图</button>
+    <button class="nav-tab" id="tab-cost" role="tab" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="17" cy="14" r="1.5"/></svg> 花费</button>
+    <button class="nav-tab" id="tab-journal" role="tab" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M4 17a3 3 0 0 1 3-3h11"/></svg> 手账</button>
   </nav>
   <div class="search-box" id="searchBox">
     <input id="searchInput" type="text" placeholder="搜城市 / 关键词，如 海滨、亲子、大理">
@@ -36,14 +36,7 @@
     <div class="upload-bar">
       <input type="file" id="photoUpload" accept="image/*">
       <label class="cam-btn hidden" id="camWrap">📷 拍照<input type="file" id="photoCamera" accept="image/*" capture="environment" hidden></label>
-      <span class="cam-tip hidden" id="camTip">📱 拍照功能仅在手机端可用</span>
-      <fieldset class="vis-field">
-        <legend>可见范围</legend>
-        <label><input type="radio" name="vis" value="local" checked> 仅自己可见</label>
-        <label><input type="radio" name="vis" value="public"> 公开共享</label>
-      </fieldset>
-      <input type="password" id="photoToken" placeholder="GitHub Token（公开需要）">
-      <small class="token-tip">⚠️ Token 仅存本地，建议使用最小权限（public_repo）token，切勿泄露分享</small>
+      <span class="cam-tip hidden" id="camTip">📱 拍照功能仅在手机端可用，桌面端请使用上方"上传图片"</span>
     </div>
     <div id="photoGrid" class="photo-grid"></div>
   </section>
@@ -61,6 +54,9 @@
             <option value="car">🚗 自驾</option>
             <option value="bus">🚌 大巴</option>
           </select></label>
+          <label>出行人数 <input id="costPeople" type="number" min="1" value="1"></label>
+          <label>出行天数 <input id="costDays" type="number" min="1" value="3"></label>
+          <label>出发日期 <input id="costDate" type="date"></label>
           <button id="costBtn">计算花费</button>
         </div>
         <div id="costResult"></div>
@@ -97,7 +93,7 @@
     </div>
     <input id="journalCity" class="city-search-input" placeholder="搜索城市" autocomplete="off">
     <textarea id="journalContent" class="journal-textarea" placeholder="分享你的旅行故事..." rows="5"></textarea>
-    <label class="journal-upload-btn">📷 添加图片<input type="file" id="journalImgInput" multiple accept="image/*" hidden></label>
+    <label class="journal-upload-btn">🖼️ 上传图片 / 📷 拍照<input type="file" id="journalImgInput" multiple accept="image/*" hidden></label>
     <div id="journalImgPreview" class="journal-img-preview"></div>
     <p class="journal-map-hint">📍 点击地图标记位置（可选）</p>
     <div id="journalPickMap" class="journal-pick-map"></div>
@@ -115,7 +111,7 @@
     <button id="journalDetailClose" class="journal-cancel-btn" style="margin-top:16px">关闭</button>
   </div>
 </div>
-<footer>共收录 <b id="cityCount"></b> 个旅游城市 · 攻略基于通用旅游知识整理，行前请核实实时信息</footer>
+<footer>共收录 <b id="cityCount"></b> 个旅游城市 · 行程与花费为参考信息，门票、交通价格可能变动，出行前请自行核实</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data.js?v=2"></script>
 <script src="trip-data.js?v=2"></script>

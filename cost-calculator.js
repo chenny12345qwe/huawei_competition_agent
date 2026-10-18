@@ -42,6 +42,13 @@ const TRANSPORT = {
   bus:{name:"🚌 大巴",costPerKm:0.3,baseCost:0,speed:70,extraTime:0.5,note:"长途大巴"}
 };
 
+// 三档单价：住宿元/晚/间、餐饮元/天/人、门票元/天/人、交通相对系数
+const COST_TIERS = [
+  {key:'low',  name:'最低', hotel:200, food:60,  ticket:100, tFactor:0.9},
+  {key:'mid',  name:'参考', hotel:350, food:100, ticket:180, tFactor:1.0},
+  {key:'high', name:'宽松', hotel:600, food:150, ticket:280, tFactor:1.3},
+];
+
 // shortcut: OSRM公共服务器国内可能不稳定,失败时降级Haversine直线
 async function getOSRMDistance(from,to){
   const [lat1,lng1]=CITY_COORDS[from], [lat2,lng2]=CITY_COORDS[to];
@@ -108,6 +115,9 @@ async function calcCost(){
   const from=document.getElementById('costFrom').value;
   const to=document.getElementById('costTo').value;
   const mode=document.getElementById('costMode').value;
+  const people=Math.max(1,parseInt(document.getElementById('costPeople').value)||1);
+  const days=Math.max(1,parseInt(document.getElementById('costDays').value)||1);
+  const dateStr=document.getElementById('costDate').value;
   const result=document.getElementById('costResult');
   if(from===to){ result.innerHTML='<p class="cost-error">出发地和目的地相同，请重新选择</p>'; return; }
   if(!CITY_COORDS[from]||!CITY_COORDS[to]){ result.innerHTML='<p class="cost-error">请从下拉建议中选择有效城市</p>'; return; }
@@ -137,20 +147,46 @@ async function calcCost(){
     }
   }
 
-  const cost=Math.round(distance*t.costPerKm+t.baseCost);
+  // 单程交通费/人 → 往返×人数 得交通基础值，再按档系数分档
+  const baseTransport=Math.round(distance*t.costPerKm+t.baseCost);
+  const nights=Math.max(0,days-1);
+  const rooms=Math.ceil(people/2);
+
+  const tiers=COST_TIERS.map(tier=>{
+    const transport=Math.round(baseTransport*2*people*tier.tFactor);
+    const hotel=nights*rooms*tier.hotel;
+    const food=days*people*tier.food;
+    const ticket=days*people*tier.ticket;
+    return {...tier, transport, hotel, food, ticket, total:transport+hotel+food+ticket};
+  });
+  const mid=tiers[1];
+
   let html=`<div class="cost-card">
-    <div class="cost-route">${from} → ${to}</div>
-    <div class="cost-distance">📏 约 ${distance} 公里 <span class="cost-source">（${source}）</span></div>
-    <div class="cost-detail">
-      <div class="cost-item"><span class="ci-label">出行方式</span><span class="ci-value">${t.name}（${t.note}）</span></div>
-      <div class="cost-item"><span class="ci-label">预估花费</span><span class="ci-value cost-price">💰 约 ${cost} 元/人</span></div>
-      <div class="cost-item"><span class="ci-label">预估耗时</span><span class="ci-value">⏱️ 约 ${hours} 小时</span></div>
+    <div class="cost-route">${from} → ${to}${dateStr?` · 📅 ${dateStr}`:''}</div>
+    <div class="cost-distance">📏 约 ${distance} 公里 <span class="cost-source">（${source}）</span> · ⏱️ 约 ${hours} 小时</div>
+    <div class="cost-breakdown">
+      <h4 class="cost-bd-title">分项估算（${people}人 · ${days}天 · 往返）<span class="src-tag">模型估算</span></h4>
+      <div class="cost-item"><span class="ci-label">🚉 交通</span><span class="ci-value">${t.name} · 约 ${mid.transport} 元</span><span class="cost-basis">${t.note}，往返×2×${people}人</span></div>
+      <div class="cost-item"><span class="ci-label">🏨 住宿</span><span class="ci-value">约 ${mid.hotel} 元</span><span class="cost-basis">经济型酒店 350 元/晚/间，2人一间，住 ${nights} 晚</span></div>
+      <div class="cost-item"><span class="ci-label">🍚 餐饮</span><span class="ci-value">约 ${mid.food} 元</span><span class="cost-basis">人均 100 元/天（早20+午30+晚50）×${days}天×${people}人</span></div>
+      <div class="cost-item"><span class="ci-label">🎫 门票</span><span class="ci-value">约 ${mid.ticket} 元</span><span class="cost-basis">人均 180 元/天（含景区交通）×${days}天×${people}人</span></div>
+    </div>
+    <div class="cost-tiers">
+      <div class="cost-tier cost-tier-low"><span class="ct-label">最低</span><span class="ct-value">💰 ${tiers[0].total} 元</span></div>
+      <div class="cost-tier cost-tier-mid"><span class="ct-label">参考</span><span class="ct-value">💰 ${tiers[1].total} 元</span></div>
+      <div class="cost-tier cost-tier-high"><span class="ct-label">宽松</span><span class="ct-value">💰 ${tiers[2].total} 元</span></div>
     </div>`;
   if(mode==='plane'&&distance<500) html+=`<p class="cost-tip">💡 短途建议选高铁，飞机可能无直飞</p>`;
   if(mode==='plane'&&distance>2000) html+=`<p class="cost-tip">💡 长途机票实际可能有折扣，建议查携程/飞猪比价</p>`;
   if(mode==='gaotie'&&distance>1500) html+=`<p class="cost-tip">💡 超长距离可能无直达高铁，需中转</p>`;
   if(mode==='car'&&distance>1000) html+=`<p class="cost-tip">💡 超长自驾建议中途休息，疲劳驾驶危险</p>`;
-  html+=`<p class="cost-disclaimer">* 花费为基于距离的估算，实际受季节、班次、油价等影响，仅供参考</p></div>`;
+  if(dateStr){
+    const m=parseInt(dateStr.slice(5,7)), d=parseInt(dateStr.slice(8,10));
+    if(m===7||m===8) html+=`<p class="cost-tip">💡 暑期旺季，机票/酒店可能上浮，建议提前预订</p>`;
+    if(m===10&&d<=7) html+=`<p class="cost-tip">💡 国庆黄金周，价格普遍上浮 30-50%，务必提前订</p>`;
+    if(m===1&&d>=28||m===2&&d<=10) html+=`<p class="cost-tip">💡 春节假期，交通/住宿价格高位，尽量避开</p>`;
+  }
+  html+=`<p class="cost-disclaimer">以上为估算，实际价格以预订时为准</p></div>`;
   result.innerHTML=html;
 }
 

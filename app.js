@@ -40,7 +40,9 @@ function renderHome(){
   // 人群
   html += `<div class="section-title">你是哪种旅行者？</div><div class="tag-grid">`;
   Object.keys(CROWDS).forEach(k=>{
+    if(k==='outdoor'||k==='foodie') return;
     const n = CITIES.filter(c=>c.crowds.includes(k)).length;
+    if(n<5) return;
     html += `<div class="tag-card" data-act="crowd" data-key="${k}"><span class="icon">${CROWD_ICON[k]}</span><div class="label">${CROWDS[k]}</div><div class="count">${n} 个城市</div></div>`;
   });
   html += `</div>`;
@@ -49,6 +51,7 @@ function renderHome(){
   html += `<div class="section-title">想玩什么？</div><div class="tag-grid">`;
   Object.keys(THEMES).forEach(k=>{
     const n = CITIES.filter(c=>c.themes.includes(k)).length;
+    if(n<5) return;
     html += `<div class="tag-card" data-act="theme" data-key="${k}"><span class="icon">${THEME_ICON[k]}</span><div class="label">${THEMES[k]}</div><div class="count">${n} 个城市</div></div>`;
   });
   html += `</div>`;
@@ -57,6 +60,7 @@ function renderHome(){
   html += `<div class="section-title">什么季节出发？</div><div class="season-row">`;
   Object.keys(SEASONS).forEach(k=>{
     const n = CITIES.filter(c=>c.seasons.includes(k)).length;
+    if(n<5) return;
     html += `<div class="season-btn" data-act="season" data-key="${k}"><span class="em">${SEASON_ICON[k]}</span>${SEASONS[k]}<br><span style="font-size:12px;color:var(--ink-soft);font-weight:400">${n} 城推荐</span></div>`;
   });
   html += `</div>`;
@@ -74,7 +78,9 @@ function renderHome(){
 function cityCard(c){
   const chips = c.themes.slice(0,2).map(t=>`<span class="chip">${THEMES[t]}</span>`).join('')
     + c.crowds.slice(0,1).map(t=>`<span class="chip crowd">${CROWDS[t]}</span>`).join('');
-  return `<div class="city-card" data-act="detail" data-key="${c.id}"><div><span class="name">${c.name}</span><span class="prov">${c.province}</span></div><div class="intro">${c.intro}</div><div class="chips">${chips}</div></div>`;
+  const trip = (typeof TRIP_DATA!=='undefined') && TRIP_DATA.cities.find(x=>x.city===c.name);
+  const tripChip = trip ? `<span class="chip trip">${trip.trips.length} 条行程</span>` : '';
+  return `<div class="city-card" data-act="detail" data-key="${c.id}"><div><span class="name">${c.name}</span><span class="prov">${c.province}</span></div><div class="intro">${c.intro}</div><div class="chips">${chips}${tripChip}</div></div>`;
 }
 
 function filterCrowd(k){
@@ -130,13 +136,19 @@ function showDetail(id){
       <div class="meta-box">👥 适合：<b>${c.crowds.map(x=>CROWDS[x]).join('、')}</b></div>
       <div class="meta-box">🎯 主题：<b>${c.themes.map(x=>THEMES[x]).join('、')}</b></div>
     </div>`;
-  [["🗺️ 行程路线","route"],["🚗 交通","traffic"],["🏨 住宿","stay"],["🍴 美食","food"],["⚠️ 避坑贴士","tips"],["💰 花费参考","cost"]].forEach(([k,v])=>{
+  [["🗺️ 行程路线","route","平台参考价"],["🚗 交通","traffic"],["🏨 住宿","stay"],["🍴 美食","food"],["⚠️ 避坑贴士","tips"],["💰 花费参考","cost","模型估算"]].forEach(([k,v,src])=>{
     if(v==='route'){
-      html += `<div class="guide-row"><div class="k">${k}</div><div class="v">${renderRoute(g[v], c.name)}</div></div>`;
+      html += `<div class="guide-row"><div class="k">${k}</div><div class="v">${renderRoute(g[v], c.name)}${src?`<span class="src-tag">${src}</span>`:''}</div></div>`;
     } else {
-      html += `<div class="guide-row"><div class="k">${k}</div><div class="v">${g[v]}</div></div>`;
+      html += `<div class="guide-row"><div class="k">${k}</div><div class="v">${g[v]}${src?`<span class="src-tag">${src}</span>`:''}</div></div>`;
     }
   });
+  const trip = (typeof TRIP_DATA!=='undefined') && TRIP_DATA.cities.find(x=>x.city===c.name);
+  if(trip){
+    html += `<div class="detail-trips"><div class="section-title">🗓️ 推荐行程安排 <span class="src-tag">平台参考价</span></div><div class="trip-grid">`;
+    trip.trips.forEach(t=>{ html += `<div class="trip-card"><div class="trip-info"><div class="trip-day">Day ${t.day}</div><div class="trip-spot">${t.spot}</div><div class="trip-intro">${t.intro}</div></div></div>`; });
+    html += `</div></div>`;
+  }
   html += `</div>`;
   app.innerHTML = html;
 
