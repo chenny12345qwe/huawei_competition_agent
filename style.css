@@ -273,3 +273,25 @@ footer{text-align:center;padding:24px;color:var(--ink-soft);font-size:13px}
 @keyframes fxRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes fxFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes fxBar{from{transform:scaleY(0);opacity:0}to{transform:scaleY(1);opacity:1}}
+/* ===== 生动增强：微动效 + 背景氛围 + 呼吸感（纯 CSS，不动业务） ===== */
+body::before{content:'';position:fixed;top:-140px;left:50%;transform:translateX(-50%);width:90%;height:280px;background:radial-gradient(ellipse,rgba(107,164,216,.13),transparent 70%);pointer-events:none;z-index:-1}
+body::after{content:'';position:fixed;bottom:-180px;right:-120px;width:55%;height:320px;background:radial-gradient(ellipse,rgba(232,168,124,.11),transparent 70%);pointer-events:none;z-index:-1}
+.city-card,.tag-card,.trip-card,.journal-card{animation:cardIn .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.city-card:hover,.tag-card:hover,.trip-card:hover,.journal-card:hover{transform:translateY(-5px);box-shadow:0 8px 24px rgba(61,53,39,.10),0 18px 44px rgba(61,53,39,.09)}
+.nav-tab:active,.costBtn:active,.journal-save-btn:active,.journal-new-btn:active,.search-box button:active{transform:scale(.96)}
+.nav-tab{position:relative}
+.nav-tab::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:0;height:2px;border-radius:2px;background:var(--blue);transition:width .25s ease}
+.nav-tab.active::after{width:55%}
+.logo{animation:logoPulse 4.5s ease-in-out infinite}
+@keyframes logoPulse{0%,100%{opacity:1}50%{opacity:.82}}
+.tag-card{background-image:linear-gradient(135deg,transparent 50%,rgba(107,164,216,.05) 100%);background-size:200% 200%;transition:background-position .4s ease,transform .25s,box-shadow .25s}
+.tag-card:hover{background-position:100% 100%}
+.season-btn{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.season-btn:hover{transform:translateY(-3px) rotate(-1deg)}
+.section-title{position:relative}
+.section-title::after{content:'〜 〜';position:absolute;right:0;top:50%;transform:translateY(-50%);color:var(--line);font-size:16px;letter-spacing:3px;opacity:.5}
+.journal-modal-card{animation:modalRise .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes modalRise{from{opacity:0;transform:translateY(22px) scale(.98)}to{opacity:1;transform:none}}
+.spot-img:not([data-loaded]){animation:imgPulse 1.8s ease-in-out infinite}
+@keyframes imgPulse{0%,100%{opacity:.5}50%{opacity:.85}}
