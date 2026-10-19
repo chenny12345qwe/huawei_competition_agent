@@ -8,7 +8,8 @@
   --shadow-lg:0 2px 8px rgba(61,53,39,.06),0 12px 32px rgba(61,53,39,.08);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:var(--blue-bg);color:var(--ink);line-height:1.65;-webkit-font-smoothing:antialiased}
+html{background:var(--blue-bg)}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);line-height:1.65;-webkit-font-smoothing:antialiased}
 .hidden{display:none!important}
 .tag-card,.city-card,.season-btn,.back,.nav-tab,.city-tab,.logo,.search-box button{touch-action:manipulation}
 
@@ -263,3 +264,18 @@ footer{text-align:center;padding:24px;color:var(--ink-soft);font-size:13px}
 .sk-card{height:120px;border-radius:var(--radius)}
 .sk-line,.sk-tag,.sk-card{background:linear-gradient(90deg,var(--warm) 25%,var(--warm-deep) 37%,var(--warm) 63%);background-size:400% 100%;animation:sk 1.4s ease infinite}
 @keyframes sk{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+/* 入场动效（fx.js 挂载；动画结束即摘类，hover transform 不受影响） */
+.fx-item{opacity:0}
+.fx-item.fx-on{animation:fxRise .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--fx-i,0)*55ms)}
+.fx-title{opacity:0}
+.fx-title.fx-on{animation:fxFade .5s ease-out both}
+.section-title.fx-title.fx-on::before{transform-origin:top;animation:fxBar .4s .15s cubic-bezier(.2,.8,.2,1) both}
+@keyframes fxRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fxFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes fxBar{from{transform:scaleY(0);opacity:0}to{transform:scaleY(1);opacity:1}}
+/* 旅行主题粒子飘落（纯原生 SVG，容器不挡交互，层级最底） */
+.travel-particles{position:fixed;inset:0;pointer-events:none;z-index:-2;overflow:hidden}
+.travel-particles .tp{position:absolute;top:0;left:0;pointer-events:auto;cursor:pointer;will-change:transform,opacity;transition:transform .14s ease}
+.travel-particles .tp svg{display:block;width:100%;height:100%}
+.travel-particles .tp-dot{position:absolute;pointer-events:none;will-change:transform,opacity;border-radius:50%}

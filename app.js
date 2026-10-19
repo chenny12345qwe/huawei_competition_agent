@@ -231,3 +231,81 @@ try {
 } finally {
   document.getElementById('loading').classList.add('hidden');
 }
+// ===== 旅行主题粒子飘落（纯原生 SVG + Vanilla JS，无第三方库）=====
+const enableTravelParticles = true;
+(function(){
+  if(!enableTravelParticles) return;
+  const COLORS=['#6BA4D8','#7FB68E','#E8A87C','#9AA6B2'];
+  const ICONS=[
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L2 12l7 2 2 7 4-5 7-14z"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="14" rx="2"/><line x1="5" y1="13" x2="19" y2="13"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/><line x1="9" y1="6" x2="15" y2="6"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h18l-2 5H5z"/><path d="M12 14V4l5 4"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="7" width="12" height="14" rx="1"/><path d="M9 7V4h6v3"/><line x1="6" y1="12" x2="18" y2="12"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-7 7-12a7 7 0 1 0-14 0c0 5 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M8 7l2-2h4l2 2"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3,6 9,4 15,6 21,4 21,18 15,20 9,18 3,20"/><line x1="9" y1="4" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="20"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 18l4-8h6l-2 8"/><line x1="10" y1="10" x2="14" y2="10"/></svg>'
+  ];
+  const MAX=20, SIZE_MIN=18, SIZE_MAX=28;
+  const wrap=document.createElement('div');
+  wrap.className='travel-particles';
+  document.body.appendChild(wrap);
+  const parts=[];
+  function spawn(){
+    if(parts.length>=MAX) return;
+    const size=SIZE_MIN+Math.random()*(SIZE_MAX-SIZE_MIN);
+    const color=COLORS[Math.floor(Math.random()*COLORS.length)];
+    const el=document.createElement('div');
+    el.className='tp';
+    el.style.width=size+'px'; el.style.height=size+'px'; el.style.color=color;
+    el.style.opacity=(0.5+Math.random()*0.3).toFixed(2);
+    el.innerHTML=ICONS[Math.floor(Math.random()*ICONS.length)];
+    const x=Math.random()*window.innerWidth;
+    const p={el,x,y:-size,vy:0.25+Math.random()*0.5,swingAmp:8+Math.random()*22,swingFreq:0.4+Math.random()*1.1,phase:Math.random()*Math.PI*2,color,dead:false};
+    el.addEventListener('click',()=>pop(p));
+    wrap.appendChild(el); parts.push(p);
+  }
+  function pop(p){
+    if(p.dead) return; p.dead=true;
+    const el=p.el, base=`translate(${p.x}px,${p.y}px)`;
+    el.style.transition='transform .14s ease';
+    el.style.transform=base+' scale(1.4)';
+    setTimeout(()=>{
+      el.style.transform=base+' scale(0.6)';
+      setTimeout(()=>{
+        const n=4+Math.floor(Math.random()*3);
+        for(let i=0;i<n;i++){
+          const d=document.createElement('div'); d.className='tp-dot';
+          const ds=4+Math.random()*3;
+          d.style.width=ds+'px'; d.style.height=ds+'px'; d.style.background=p.color;
+          d.style.left=p.x+'px'; d.style.top=p.y+'px'; d.style.opacity='0.6';
+          wrap.appendChild(d);
+          const ang=Math.random()*Math.PI*2, dist=18+Math.random()*22;
+          d.style.transition='transform .5s ease, opacity .5s ease';
+          requestAnimationFrame(()=>{ d.style.transform=`translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist}px)`; d.style.opacity='0'; });
+          setTimeout(()=>d.remove(),520);
+        }
+        el.style.transition='opacity .3s ease'; el.style.opacity='0';
+        setTimeout(()=>{ el.remove(); const idx=parts.indexOf(p); if(idx>-1) parts.splice(idx,1); },320);
+      },140);
+    },140);
+  }
+  let last=0;
+  function loop(t){
+    if(!last) last=t;
+    if(t-last>700){ spawn(); last=t; }
+    const H=window.innerHeight;
+    for(let i=parts.length-1;i>=0;i--){
+      const p=parts[i];
+      if(p.dead) continue;
+      p.phase+=p.swingFreq*0.02;
+      const swingX=Math.sin(p.phase)*p.swingAmp;
+      if(p.y>H*0.55){ p.vy*=0.97; p.y+=p.vy+Math.sin(p.phase*1.3)*0.25; }
+      else { p.y+=p.vy; }
+      p.el.style.transform=`translate(${p.x+swingX}px,${p.y}px)`;
+      if(p.y>H+40){ p.el.remove(); parts.splice(i,1); }
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
