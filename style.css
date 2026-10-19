@@ -276,6 +276,7 @@ footer{text-align:center;padding:24px;color:var(--ink-soft);font-size:13px}
 @keyframes fxBar{from{transform:scaleY(0);opacity:0}to{transform:scaleY(1);opacity:1}}
 /* 旅行主题粒子飘落（纯原生 SVG，容器不挡交互，层级最底） */
 .travel-particles{position:fixed;inset:0;pointer-events:none;z-index:-2;overflow:hidden}
-.travel-particles .tp{position:absolute;top:0;left:0;pointer-events:auto;cursor:pointer;will-change:transform,opacity;transition:transform .14s ease}
+.travel-particles .tp{position:absolute;pointer-events:auto;cursor:pointer;will-change:transform,opacity;animation:tpFloat 7s ease-in-out infinite}
+@keyframes tpFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(4deg)}}
 .travel-particles .tp svg{display:block;width:100%;height:100%}
 .travel-particles .tp-dot{position:absolute;pointer-events:none;will-change:transform,opacity;border-radius:50%}
