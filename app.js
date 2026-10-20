@@ -231,3 +231,38 @@ try {
 } finally {
   document.getElementById('loading').classList.add('hidden');
 }
+// ===== 底层水波纹背景（纯 canvas，安静通透，不干扰上层）=====
+(function(){
+  const c=document.createElement('canvas');
+  c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:-1;background:linear-gradient(135deg,#EAF2FA 0%,#E8E2D8 100%)';
+  document.body.appendChild(c);
+  const ctx=c.getContext('2d');
+  let W,H,cx,cy,maxR,dpr;
+  function resize(){
+    dpr=Math.min(window.devicePixelRatio||1,2);
+    W=innerWidth; H=innerHeight;
+    c.width=W*dpr; c.height=H*dpr;
+    c.style.width=W+'px'; c.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    cx=W/2; cy=H/2; maxR=Math.hypot(W,H)/2;
+  }
+  resize();
+  addEventListener('resize',resize);
+  const N=4, speed=0.25;
+  let t=0;
+  (function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(let i=0;i<N;i++){
+      const phase=(t*speed + i*maxR/N) % maxR;
+      const p=phase/maxR, a=Math.sin(p*Math.PI)*0.10;
+      if(a<=0||phase<=0) continue;
+      ctx.beginPath();
+      ctx.arc(cx,cy,phase,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(107,164,216,${a})`;
+      ctx.lineWidth=1;
+      ctx.stroke();
+    }
+    t++;
+    requestAnimationFrame(draw);
+  })();
+})();
