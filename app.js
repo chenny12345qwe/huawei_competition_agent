@@ -234,8 +234,8 @@ try {
 // ===== 底层水面背景（纯 canvas，多向波叠加高度场，真实明暗起伏）=====
 (function(){
   const c=document.createElement('canvas');
-  c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:-2';
-  document.body.appendChild(c);
+  c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:0';
+  document.body.insertBefore(c,document.body.firstChild);
   const ctx=c.getContext('2d');
   const GW=120, GH=68;
   const off=document.createElement('canvas');
