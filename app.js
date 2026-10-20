@@ -234,7 +234,7 @@ try {
 // ===== 底层水面背景（纯 canvas，多向波叠加高度场，真实明暗起伏）=====
 (function(){
   const c=document.createElement('canvas');
-  c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:-1';
+  c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:-2';
   document.body.appendChild(c);
   const ctx=c.getContext('2d');
   const GW=120, GH=68;
@@ -268,7 +268,7 @@ try {
         for(const w of waves) h+=w.amp*Math.sin((x*w.dx+y*w.dy)*w.freq+tt*w.speed+w.phase);
         h/=2.2;
         const i=(y*GW+x)*4;
-        d[i]=base[0]+h*18; d[i+1]=base[1]+h*14; d[i+2]=base[2]+h*10; d[i+3]=255;
+        d[i]=base[0]+h*35; d[i+1]=base[1]+h*26; d[i+2]=base[2]+h*18; d[i+3]=255;
       }
     }
     octx.putImageData(img,0,0);
