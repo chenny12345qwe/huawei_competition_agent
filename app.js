@@ -231,12 +231,17 @@ try {
 } finally {
   document.getElementById('loading').classList.add('hidden');
 }
-// ===== 底层水波纹背景（纯 canvas，多源衰减涟漪，真实水面感）=====
+// ===== 底层水面背景（纯 canvas，多向波叠加高度场，真实明暗起伏）=====
 (function(){
   const c=document.createElement('canvas');
-  c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:-1;background:linear-gradient(135deg,#EAF2FA 0%,#E8E2D8 100%)';
+  c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:-1';
   document.body.appendChild(c);
   const ctx=c.getContext('2d');
+  const GW=120, GH=68;
+  const off=document.createElement('canvas');
+  off.width=GW; off.height=GH;
+  const octx=off.getContext('2d');
+  const img=octx.createImageData(GW,GH);
   let W,H,dpr;
   function resize(){
     dpr=Math.min(window.devicePixelRatio||1,2);
@@ -244,37 +249,31 @@ try {
     c.width=W*dpr; c.height=H*dpr;
     c.style.width=W+'px'; c.style.height=H+'px';
     ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.imageSmoothingEnabled=true;
   }
   resize();
   addEventListener('resize',resize);
-  const ripples=[], MAX=8;
-  let lastSpawn=0;
-  function spawn(t){
-    if(ripples.length>=MAX) return;
-    if(t-lastSpawn < 1800+Math.random()*2200) return;
-    lastSpawn=t;
-    ripples.push({
-      x:Math.random()*W, y:Math.random()*H, r:0,
-      maxR:180+Math.random()*220,
-      speed:0.18+Math.random()*0.12,
-      hue:Math.random()<0.5?'107,164,216':'140,160,180'
-    });
-  }
+  const waves=[
+    {dx:0.8,dy:0.6,freq:0.08,speed:0.6,amp:1.0,phase:0},
+    {dx:-0.6,dy:0.8,freq:0.11,speed:0.45,amp:0.7,phase:1.3},
+    {dx:0.3,dy:-0.95,freq:0.06,speed:0.8,amp:0.5,phase:2.7},
+    {dx:-0.9,dy:-0.4,freq:0.14,speed:0.35,amp:0.4,phase:4.1}
+  ];
+  const base=[234,242,250];
   (function draw(t){
-    ctx.clearRect(0,0,W,H);
-    spawn(t||0);
-    for(let i=ripples.length-1;i>=0;i--){
-      const rp=ripples[i];
-      rp.r+=rp.speed;
-      const p=rp.r/rp.maxR;
-      if(p>=1){ ripples.splice(i,1); continue; }
-      const a=Math.sin(p*Math.PI)*0.12*(1-p*0.5);
-      ctx.beginPath();
-      ctx.arc(rp.x,rp.y,rp.r,0,Math.PI*2);
-      ctx.strokeStyle=`rgba(${rp.hue},${a})`;
-      ctx.lineWidth=1;
-      ctx.stroke();
+    const tt=t*0.001, d=img.data;
+    for(let y=0;y<GH;y++){
+      for(let x=0;x<GW;x++){
+        let h=0;
+        for(const w of waves) h+=w.amp*Math.sin((x*w.dx+y*w.dy)*w.freq+tt*w.speed+w.phase);
+        h/=2.2;
+        const i=(y*GW+x)*4;
+        d[i]=base[0]+h*18; d[i+1]=base[1]+h*14; d[i+2]=base[2]+h*10; d[i+3]=255;
+      }
     }
+    octx.putImageData(img,0,0);
+    ctx.clearRect(0,0,W,H);
+    ctx.drawImage(off,0,0,GW,GH,0,0,W,H);
     requestAnimationFrame(draw);
   })();
 })();
