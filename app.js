@@ -169,25 +169,30 @@ async function _fetchSpotPhoto(city, spot){
   const core=spot.replace(/夜景|晨景|日落|日出|夜市|附近|周边|沿线|景区$/g,'').trim()||spot;
   const url=`https://restapi.amap.com/v3/place/text?keywords=${encodeURIComponent(core)}&city=${encodeURIComponent(city)}&citylimit=true&extensions=all&offset=20&key=${AMAP_WEB_KEY}`;
   try{
-    const r=await fetch(url);
+    const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej('timeout'),5000))]);
     const d=await r.json();
     if(!d.pois||!d.pois.length)return null;
     const withPhoto=d.pois.filter(p=>p.photos&&p.photos[0]);
     if(!withPhoto.length)return null;
-    const match=withPhoto.filter(p=>p.name.includes(core)).sort((a,b)=>a.name.length-b.name.length)[0]||withPhoto[0];
+    let match=withPhoto.filter(p=>p.name.includes(core)).sort((a,b)=>a.name.length-b.name.length)[0];
+    if(!match){const k=core.replace(/大|教堂|景区|公园|广场|风景区|寺|塔$/g,'').trim(); if(k)match=withPhoto.filter(p=>p.name.includes(k)||k.includes(p.name)).sort((a,b)=>a.name.length-b.name.length)[0];}
+    if(!match)match=withPhoto[0];
     return match.photos[0].url;
   }catch(e){return null;}
 }
 async function loadSpotImages(){
   if(!AMAP_WEB_KEY)return;
-  document.querySelectorAll('.spot-img:not([data-loaded])').forEach(async box=>{
-    box.setAttribute('data-loaded','1');
-    const city=box.dataset.city, spot=box.dataset.spot, key=city+'|'+spot;
-    if(_spotImgCache.has(key)){box.innerHTML=_spotImgCache.get(key);return;}
-    box.textContent='加载图…';
-    const url=await _fetchSpotPhoto(city, spot);
-    if(url){const h=`<img src="${url}" loading="lazy" alt="${spot}">`;_spotImgCache.set(key,h);box.innerHTML=h;}else box.textContent='';
-  });
+  const boxes=[...document.querySelectorAll('.spot-img:not([data-loaded])')];
+  boxes.forEach(b=>b.setAttribute('data-loaded','1'));
+  for(let i=0;i<boxes.length;i+=3){
+    await Promise.all(boxes.slice(i,i+3).map(async box=>{
+      const city=box.dataset.city, spot=box.dataset.spot, key=city+'|'+spot;
+      if(_spotImgCache.has(key)){box.innerHTML=_spotImgCache.get(key);return;}
+      box.textContent='加载图…';
+      const url=await _fetchSpotPhoto(city, spot);
+      if(url){const h=`<img src="${url}" loading="lazy" alt="${spot}">`;_spotImgCache.set(key,h);box.innerHTML=h;}else box.textContent='';
+    }));
+  }
 }
 
 function renderRoute(routeText, cityName){
