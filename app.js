@@ -169,7 +169,7 @@ async function _fetchSpotPhoto(city, spot){
   const core=spot.replace(/夜景|晨景|日落|日出|夜市|附近|周边|沿线|景区$/g,'').trim()||spot;
   const url=`https://restapi.amap.com/v3/place/text?keywords=${encodeURIComponent(core)}&city=${encodeURIComponent(city)}&citylimit=true&extensions=all&offset=20&key=${AMAP_WEB_KEY}`;
   try{
-    const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej('timeout'),5000))]);
+    const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej('timeout'),3000))]);
     const d=await r.json();
     if(!d.pois||!d.pois.length)return null;
     const withPhoto=d.pois.filter(p=>p.photos&&p.photos[0]);
@@ -190,7 +190,7 @@ async function loadSpotImages(){
       if(_spotImgCache.has(key)){box.innerHTML=_spotImgCache.get(key);return;}
       box.textContent='加载图…';
       const url=await _fetchSpotPhoto(city, spot);
-      if(url){const h=`<img src="${url}" loading="lazy" alt="${spot}">`;_spotImgCache.set(key,h);box.innerHTML=h;}else box.textContent='';
+      if(url){const h=`<img src="${url}" loading="lazy" decoding="async" alt="${spot}">`;_spotImgCache.set(key,h);box.innerHTML=h;}else box.textContent='';
     }));
   }
 }
