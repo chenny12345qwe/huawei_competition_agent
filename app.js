@@ -163,36 +163,20 @@ function transitBetween(a, b){
   return far ? '🚕 打车/公交 约40-60分钟' : '🚇 地铁/步行 约20-30分钟';
 }
 // 高德 Web 服务 key：去 https://lbs.amap.com 控制台→应用管理→创建key→服务平台选"Web服务"，填入此处
-const AMAP_WEB_KEY='9476e96a46c4f89e69918fe0d78a854a';
 const _spotImgCache=new Map();
-async function _fetchSpotPhoto(city, spot){
-  const core=spot.replace(/夜景|晨景|日落|日出|夜市|附近|周边|沿线|景区$/g,'').trim()||spot;
-  const url=`https://restapi.amap.com/v3/place/text?keywords=${encodeURIComponent(core)}&city=${encodeURIComponent(city)}&citylimit=true&extensions=all&offset=20&key=${AMAP_WEB_KEY}`;
-  try{
-    const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej('timeout'),3000))]);
-    const d=await r.json();
-    if(!d.pois||!d.pois.length)return null;
-    const withPhoto=d.pois.filter(p=>p.photos&&p.photos[0]);
-    if(!withPhoto.length)return null;
-    let match=withPhoto.filter(p=>p.name.includes(core)).sort((a,b)=>a.name.length-b.name.length)[0];
-    if(!match){const k=core.replace(/大|教堂|景区|公园|广场|风景区|寺|塔$/g,'').trim(); if(k)match=withPhoto.filter(p=>p.name.includes(k)||k.includes(p.name)).sort((a,b)=>a.name.length-b.name.length)[0];}
-    if(!match)match=withPhoto[0];
-    return match.photos[0].url;
-  }catch(e){return null;}
-}
-async function loadSpotImages(){
-  if(!AMAP_WEB_KEY)return;
-  const boxes=[...document.querySelectorAll('.spot-img:not([data-loaded])')];
-  boxes.forEach(b=>b.setAttribute('data-loaded','1'));
-  for(let i=0;i<boxes.length;i+=3){
-    await Promise.all(boxes.slice(i,i+3).map(async box=>{
-      const city=box.dataset.city, spot=box.dataset.spot, key=city+'|'+spot;
-      if(_spotImgCache.has(key)){box.innerHTML=_spotImgCache.get(key);return;}
-      box.textContent='加载图…';
-      const url=await _fetchSpotPhoto(city, spot);
-      if(url){const h=`<img src="${url}" loading="lazy" decoding="async" alt="${spot}">`;_spotImgCache.set(key,h);box.innerHTML=h;}else box.textContent='';
-    }));
-  }
+// 热门景点图直链（手动配置：键=景点名与route一致，值=图片URL）。未配置的景点用 picsum 通用风景图兜底。
+// 配置示例："圣索菲亚教堂":"https://upload.wikimedia.org/wikipedia/commons/thumb/.../400px-....jpg"
+const SPOT_IMAGES = {
+};
+function loadSpotImages(){
+  document.querySelectorAll('.spot-img:not([data-loaded])').forEach(box=>{
+    box.setAttribute('data-loaded','1');
+    const city=box.dataset.city, spot=box.dataset.spot, key=city+'|'+spot;
+    if(_spotImgCache.has(key)){box.innerHTML=_spotImgCache.get(key);return;}
+    const url=SPOT_IMAGES[spot]||`https://picsum.photos/seed/${encodeURIComponent(city+spot)}/400/300`;
+    const h=`<img src="${url}" loading="lazy" decoding="async" alt="${spot}">`;
+    _spotImgCache.set(key,h);box.innerHTML=h;
+  });
 }
 
 function renderRoute(routeText, cityName){
